@@ -2,7 +2,6 @@ package com.mavenforge.Http;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.logging.Logger;
 
 public class Router {
 
@@ -42,13 +41,9 @@ public class Router {
     public void resolve() {
         String path = this.request.getPath();
 
-        
-
         if (!path.equals("/") && path.charAt(path.length() - 1) == '/') {
             path = path.substring(0, path.length() - 1);
         }
-
-        Logger.getLogger(path).info("Path: " + path + " - Method: " + this.request.getMethod());
 
         String method = this.request.getMethod().toLowerCase();
         Object callback = this.routes.get(method).get(path);
