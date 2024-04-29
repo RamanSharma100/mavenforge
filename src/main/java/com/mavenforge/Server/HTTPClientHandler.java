@@ -1,10 +1,13 @@
 package com.mavenforge.Server;
 
 import java.net.Socket;
+import java.lang.reflect.Constructor;
+
 import com.mavenforge.Http.Router;
 import com.mavenforge.Application;
 import com.mavenforge.Http.HTTPRequest;
 import com.mavenforge.Http.HTTPResponse;
+import com.mavenforge.Utils.ImportClass;
 
 public class HTTPClientHandler implements Runnable {
     private Socket clientSocket;
@@ -29,7 +32,7 @@ public class HTTPClientHandler implements Runnable {
                 return;
             }
 
-            Application.router.get("/", "Hello from MavenForge Java MVC Framework");
+            this.loadRoutes();
 
             Application.router.resolve();
 
@@ -43,6 +46,31 @@ public class HTTPClientHandler implements Runnable {
     @Override
     public void run() {
         handleRequest();
+    }
+
+    private void loadRoutes() {
+        try {
+
+            String routesPackage = Application.rootClassPackage + ".Web.Routes";
+            Class<?> RoutesClass = ImportClass.fromPackage(routesPackage);
+
+            if (RoutesClass != null) {
+                try {
+                    Constructor<?> RoutesConstructor = RoutesClass.getDeclaredConstructor();
+                    Object Routes = RoutesConstructor.newInstance();
+
+                    RoutesClass.getMethod("init").invoke(Routes);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            } else {
+                System.out.println("Routes class not found");
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
 }

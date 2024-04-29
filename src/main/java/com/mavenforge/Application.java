@@ -6,18 +6,24 @@ import com.mavenforge.Http.Router;
 import com.mavenforge.Http.HTTPRequest;
 import com.mavenforge.Http.HTTPResponse;
 import com.mavenforge.Server.HTTPServer;
+import com.mavenforge.Utils.Validation;
 
 public class Application {
     public static Router router;
     public static ServerSocket server;
     public static HTTPRequest request;
     public static HTTPResponse response;
+    public transient static String rootClassPackage;
 
-    public static void run(String[] args) {
+    public static void run(
+            Class<?> context,
+            String[] args) {
+
+        String rootClassPackage = context.getPackageName();
+
+        Application.rootClassPackage = rootClassPackage;
 
         int port = getPort(args);
-
-        System.out.println("Package Name Where this function is called: " + Application.class.getPackageName());
 
         HTTPServer server = new HTTPServer(port);
 
@@ -26,6 +32,12 @@ public class Application {
         System.out.println("-------------------------------------------");
 
         System.out.println("Starting Development server...");
+
+        if (!Validation.isRoutesFilePresent(rootClassPackage)) {
+            System.err.println(
+                    "Routes file not found. Please create a Routes file in the Web folder at root of application.");
+            System.exit(1);
+        }
 
         server.start();
 
