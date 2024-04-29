@@ -26,6 +26,7 @@ replay_pid*
 target/
 src/main/java/com/mavenforge/Test/**
 
-src/main/java/com/mavenforge/Test/*.Java
-src/main/java/com/mavenforge/Web/*.Java
+src/main/java/com/mavenforge/Test/*.java
+src/main/java/com/mavenforge/Web/*.java
+src/main/java/com/mavenforge/Web
 src/main/java/com/mavenforge/Main.java
