@@ -50,8 +50,7 @@ public class HTTPClientHandler implements Runnable {
 
     private void loadRoutes() {
         try {
-
-            String routesPackage = Application.rootClassPackage + ".Web.Routes";
+            String routesPackage = Application.rootClassPackage + ".routes.Web";
             Class<?> RoutesClass = ImportClass.fromPackage(routesPackage);
 
             if (RoutesClass != null) {

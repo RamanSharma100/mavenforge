@@ -1,7 +1,14 @@
 package com.mavenforge.Http;
 
 import java.util.Map;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.lang.reflect.Method;
+
+import java.lang.reflect.InvocationTargetException;
+
+import com.mavenforge.Application;
+import com.mavenforge.Utils.Validation;
 
 public class Router {
 
@@ -53,11 +60,95 @@ public class Router {
             return;
         }
 
+        if (callback instanceof String) {
+            if (callback.toString().contains("@")) {
+                String controllerName = callback.toString().split("@")[0];
+                String methodName = callback.toString().split("@")[1];
+
+                try {
+                    String controllerPackage = Application.rootClassPackage
+                            + ".controllers." + controllerName;
+                    Class<?> controller = Class.forName(controllerPackage);
+
+                    this.invokeControllerMethod(controller, methodName, controllerName, controllerPackage);
+                    return;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    this.response.status(500).response("Controller '" + controllerName + "' not found, Create " +
+                            controllerName + ".java in " + Application.rootClassPackage + ".controllers package")
+                            .send();
+                    return;
+                }
+
+            } else {
+                this.response.status(200).response("Render view: " + callback.toString() + ".html").send();
+                return;
+            }
+        }
+
         this.response.status(200).response(callback.toString()).send();
     }
 
     public Map<String, Map<String, Object>> getRoutes() {
         return this.routes;
+    }
+
+    private void invokeControllerMethod(Class<?> controller, String methodName, String controllerName,
+            String controllerPackage) {
+        try {
+            Object controllerInstance = controller.getDeclaredConstructor().newInstance();
+            Method[] methods = controller.getDeclaredMethods();
+            Method methodToInvoke = null;
+
+            for (Method method : methods) {
+                if (method.getName().equals(methodName)) {
+                    if (method.getParameterCount() == 0) {
+                        methodToInvoke = method;
+                        break;
+                    } else if (method.getParameterCount() == 1) {
+                        if (method.getParameterTypes()[0] == HTTPRequest.class) {
+                            methodToInvoke = method;
+                            break;
+                        } else if (method.getParameterTypes()[0] == HTTPResponse.class) {
+                            methodToInvoke = method;
+                            break;
+                        }
+                    }
+
+                    else if (method.getParameterCount() == 2
+                            && method.getParameterTypes()[0] == HTTPRequest.class
+                            && method.getParameterTypes()[1] == HTTPResponse.class) {
+                        methodToInvoke = method;
+                        break;
+                    }
+                }
+            }
+
+            if (methodToInvoke != null) {
+                if (methodToInvoke.getParameterCount() == 0) {
+                    methodToInvoke.invoke(controllerInstance);
+                } else if (methodToInvoke.getParameterCount() == 1) {
+                    if (methodToInvoke.getParameterTypes()[0] == HTTPRequest.class) {
+                        methodToInvoke.invoke(controllerInstance, request);
+                    } else if (methodToInvoke.getParameterTypes()[0] == HTTPResponse.class) {
+                        methodToInvoke.invoke(controllerInstance, response);
+                    }
+                } else if (methodToInvoke.getParameterCount() == 2) {
+                    methodToInvoke.invoke(controllerInstance, request, response);
+                }
+            } else {
+                response.status(500)
+                        .response("Method '" + methodName + "' with expected signatures not found in controller '"
+                                + controllerPackage + "'")
+                        .send();
+            }
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException
+                | NoSuchMethodException e) {
+            response.status(500)
+                    .response("Error invoking method '" + methodName + "' in controller '" + controllerPackage + "'")
+                    .send();
+        }
     }
 
 }

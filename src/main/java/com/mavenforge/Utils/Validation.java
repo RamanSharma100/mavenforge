@@ -2,6 +2,7 @@ package com.mavenforge.Utils;
 
 import com.mavenforge.Application;
 
+import java.net.URL;
 import java.lang.ClassNotFoundException;
 
 public class Validation {
@@ -9,7 +10,7 @@ public class Validation {
             String packageName) {
         try {
 
-            String routesPackage = Application.rootClassPackage + ".Web.Routes";
+            String routesPackage = Application.rootClassPackage + ".routes.Web";
             Class<?> routesClass = ImportClass.fromPackage(routesPackage);
 
             if (routesClass != null) {
@@ -23,4 +24,5 @@ public class Validation {
         }
 
     }
+
 }

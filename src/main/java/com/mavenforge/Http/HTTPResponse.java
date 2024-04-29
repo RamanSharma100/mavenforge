@@ -53,7 +53,8 @@ public class HTTPResponse {
     public HTTPResponse send() {
         this.writer.flush();
         System.out.println(request.getMethod() + " " + request.getPath() + "\t" + this.responseTime
-                + "ms\t" + this.responseByte + " bytes\t" + this.getStatusText(this.statusCode));
+                + "ms\t" + this.responseByte + " bytes\t" + this.statusCode + " - "
+                + this.getStatusText(this.statusCode));
 
         return this;
     }
