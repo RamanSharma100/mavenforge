@@ -1,6 +1,7 @@
 package com.mavenforge.Http;
 
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.HashMap;
 import java.lang.reflect.Method;
 
@@ -85,7 +86,10 @@ public class Router {
             }
         }
 
-        this.response.status(200).response(callback.toString()).send();
+        @SuppressWarnings("unchecked")
+        BiConsumer<HTTPRequest, HTTPResponse> func = (BiConsumer<HTTPRequest, HTTPResponse>) (BiConsumer<?, ?>) callback;
+        func.accept(this.request, this.response);
+        return;
     }
 
     public Map<String, Map<String, Object>> getRoutes() {
