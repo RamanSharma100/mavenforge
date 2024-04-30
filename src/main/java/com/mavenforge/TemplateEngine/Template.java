@@ -26,4 +26,8 @@ public class Template {
 
         return renderedContent;
     }
+
+    public String getContent() {
+        return this.content;
+    }
 }
