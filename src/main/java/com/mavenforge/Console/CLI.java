@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.mavenforge.Server.HTTPServer;
-import com.mavenforge.TemplateEngine.Parser;
-import com.mavenforge.TemplateEngine.TemplateEngine;
-import com.mavenforge.TemplateEngine.TemplateLoader;
+import com.mavenforge.Engines.Template.TemplateEngine;
+import com.mavenforge.Engines.Template.TemplateLoader;
 
 public class CLI {
     public static void main(String[] args) {
@@ -29,8 +28,7 @@ public class CLI {
         data.put("items", itemsList);
 
         TemplateLoader templateLoader = new TemplateLoader();
-        Parser parser = new Parser();
-        TemplateEngine engine = new TemplateEngine(templateLoader, parser);
+        TemplateEngine engine = new TemplateEngine(templateLoader);
 
         String renderedContent = engine.renderFromFile(
                 "/media/fullyworldwebtutorials/Projects/mavenforge/src/main/java/com/mavenforge/index.vyuha", data);

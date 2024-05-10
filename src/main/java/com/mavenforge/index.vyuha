@@ -11,13 +11,13 @@
     <h1>{{ greeting }}</h1>
 
     <ul>
-        {{if items != null}}
-        {{for item in items}}
+        {if items != null}
+        {for item in items}
         <li>{{ item }}</li>
-        {{/for}}
-        {{else}}
+        {/for}
+        {else}
         <li>No items available</li>
-        {{/if}}
+        {/if}
     </ul>
 </body>
 
