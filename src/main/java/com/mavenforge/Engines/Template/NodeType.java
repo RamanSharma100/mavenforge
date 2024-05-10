@@ -1,5 +1,5 @@
 package com.mavenforge.Engines.Template;
 
 public enum NodeType {
-    ROOT, INTERPOLATION, IF, FOR
+    TEXT, ROOT, INTERPOLATION, IF, FOR
 }
