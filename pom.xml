@@ -8,6 +8,12 @@
     <artifactId>mavenforge</artifactId>
     <version>0.1-SNAPSHOT</version>
 
+    <dependency>
+        <groupId>javax.script</groupId>
+        <artifactId>script-api</artifactId>
+        <version>1.0</version>
+    </dependency>
+
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>

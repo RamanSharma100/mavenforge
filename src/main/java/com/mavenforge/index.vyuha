@@ -12,12 +12,12 @@
 
     <ul>
         {if items != null}
+        <li>No items available</li>
+        {/if}
+
         {for item in items}
         <li>{{ item }}</li>
         {/for}
-        {else}
-        <li>No items available</li>
-        {/if}
     </ul>
 </body>
 
