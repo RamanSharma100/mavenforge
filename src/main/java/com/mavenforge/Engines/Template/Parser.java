@@ -16,96 +16,79 @@ public class Parser {
         this.current = new Node("", NodeType.ROOT);
         this.root = this.current;
         int start = 0;
-        boolean isBlock = false;
 
         for (int i = 0; i < template.length(); i++) {
             if (template.charAt(i) == '{' && i < template.length() - 1) {
-
                 if (template.charAt(i + 1) == '{') {
-
                     if (i > start) {
                         String text = template.substring(start, i);
                         this.current.children.add(new TextNode(text));
                     }
-
-                    if (isBlock) {
-                        i = i + 2;
-                        start = i;
-
-                        continue;
-
-                    }
-
-                    int end = template.indexOf("}}", i + 2);
+                    int end = template.indexOf("}}", i);
                     if (end == -1) {
                         throw new IllegalArgumentException("Unclosed interpolation");
                     }
-
                     String content = template.substring(i + 2, end).trim();
                     this.current.children.add(new Node(content, NodeType.INTERPOLATION));
-
                     i = end + 1;
-                    start = i;
-                    isBlock = false;
+                    start = i + 1;
                 } else if (template.charAt(i + 1) == '/') {
-
-                    if (this.current != this.root) {
-
-                        this.current = this.current.parent;
-
-                    } else {
-                        throw new IllegalArgumentException("Unexpected closing block");
+                    int end = template.indexOf("}", i);
+                    if (end == -1) {
+                        throw new IllegalArgumentException("Unclosed end block");
                     }
-
-                    i += 2;
-                    start = i;
-
+                    String content = template.substring(i + 2, end).trim();
+                    Node temp = this.current;
+                    while (temp != null && !temp.type.toString().equalsIgnoreCase(content)) {
+                        temp = temp.parent;
+                    }
+                    if (temp == null) {
+                        throw new IllegalArgumentException("Mismatched end block");
+                    }
+                    this.current = temp.parent;
+                    i = end;
+                    start = i + 1;
                 } else {
-
-                    int end = template.indexOf("}", i + 1);
+                    if (i > start) {
+                        String text = template.substring(start, i);
+                        this.current.children.add(new TextNode(text));
+                    }
+                    int end = template.indexOf("}", i);
                     if (end == -1) {
                         throw new IllegalArgumentException("Unclosed block");
                     }
                     String content = template.substring(i + 1, end).trim();
-                    NodeType blockType = this.getBlockType(content);
+                    NodeType blockType = getBlockType(content);
                     Node newNode = new Node(content, blockType);
                     this.current.children.add(newNode);
                     newNode.parent = this.current;
                     this.current = newNode;
-
                     i = end;
                     start = i + 1;
-
                 }
             }
         }
-
         if (start < template.length()) {
             String text = template.substring(start);
             this.current.children.add(new TextNode(text));
         }
-
         if (this.current != this.root) {
             throw new IllegalArgumentException("Unclosed block");
         }
-
         return this.root;
     }
 
     private NodeType getBlockType(String content) {
         if (content.startsWith("if")) {
             return NodeType.IF;
+        } else if (content.startsWith("else if")) {
+            return NodeType.ELSEIF;
         } else if (content.startsWith("else")) {
-            if (content.startsWith("elseif")) {
-                return NodeType.ELSEIF;
-            } else {
-                return NodeType.ELSE;
-            }
+            return NodeType.ELSE;
         } else if (content.startsWith("for")) {
             return NodeType.FOR;
         } else {
             throw new IllegalArgumentException("Unknown block type");
         }
     }
-
 }

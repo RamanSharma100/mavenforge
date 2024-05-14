@@ -1,10 +1,11 @@
 package com.mavenforge.Engines.Template;
 
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Value;
 
 import com.mavenforge.Exceptions.TemplateException;
 
@@ -54,6 +55,13 @@ public class Template {
                     for (Node child : node.children) {
                         result.append(execute(child, context));
                     }
+                } else {
+                    Node elseNode = findElseNode(node);
+                    if (elseNode != null) {
+                        for (Node child : elseNode.children) {
+                            result.append(execute(child, context));
+                        }
+                    }
                 }
                 break;
             case ELSE:
@@ -65,11 +73,10 @@ public class Template {
             case FOR:
                 List<Object> items = evaluateExpression(node.content, context);
                 for (Object item : items) {
-                    context.push(item);
+                    context.getData().put("item", item);
                     for (Node child : node.children) {
                         result.append(execute(child, context));
                     }
-                    context.pop();
                 }
                 break;
             default:
@@ -80,19 +87,19 @@ public class Template {
     }
 
     private boolean evaluateCondition(String condition, TemplateContext context) {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("javascript");
+        try (Context jsContext = Context.newBuilder("js")
+                .option("engine.WarnInterpreterOnly", "false")
+                .build()) {
+            Value bindings = jsContext.getBindings("js");
+            condition = condition.replace("if", "").trim();
 
-        if (engine == null) {
-            System.out.println("No JavaScript engine available.");
-        } else {
-            System.out.println("JavaScript engine is available.");
-        }
+            for (Map.Entry<String, Object> entry : context.getData().entrySet()) {
+                bindings.putMember(entry.getKey(), entry.getValue());
+            }
+            condition = "function evaluate() { return " + condition + "; } evaluate();";
+            Value value = jsContext.eval("js", condition);
 
-        try {
-
-            return (Boolean) engine.eval(condition);
-
+            return value.asBoolean();
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -101,12 +108,23 @@ public class Template {
 
     @SuppressWarnings("unchecked")
     private List<Object> evaluateExpression(String expression, TemplateContext context) {
+
         Object value = context.get(expression);
+
         if (value instanceof List<?>) {
             return (List<Object>) value;
         } else {
             throw new RuntimeException("Expression does not evaluate to a list: " + expression);
         }
+    }
+
+    private Node findElseNode(Node ifNode) {
+        for (Node sibling : ifNode.parent.children) {
+            if (sibling.type == NodeType.ELSE || sibling.type == NodeType.ELSEIF) {
+                return sibling;
+            }
+        }
+        return null;
     }
 
 }
