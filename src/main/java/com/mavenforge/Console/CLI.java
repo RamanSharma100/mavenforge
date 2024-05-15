@@ -24,6 +24,7 @@ public class CLI {
         Map<String, Object> data = new HashMap<>();
         data.put("title", "Shopping List");
         data.put("greeting", "Welcome to our store!");
+        data.put("showItems", true);
         List<String> itemsList = Arrays.asList("Apples", "Bananas", "Oranges");
         data.put("items", itemsList);
 

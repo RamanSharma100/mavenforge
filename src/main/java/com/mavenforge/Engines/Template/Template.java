@@ -51,12 +51,16 @@ public class Template {
                 break;
             case IF:
                 boolean condition = evaluateCondition(node.content, context);
+                System.out.println("condition: " + node.content);
                 if (condition) {
+                    System.out.println("node.children: " + node.children);
                     for (Node child : node.children) {
+                        System.out.println("child: " + child);
                         result.append(execute(child, context));
                     }
                 } else {
-                    Node elseNode = findElseNode(node);
+                    Node elseNode = findElseNode(node, context);
+                    System.out.println("elseNode: " + elseNode);
                     if (elseNode != null) {
                         for (Node child : elseNode.children) {
                             result.append(execute(child, context));
@@ -109,6 +113,8 @@ public class Template {
     @SuppressWarnings("unchecked")
     private List<Object> evaluateExpression(String expression, TemplateContext context) {
 
+        expression = expression.contains("in") ? expression.split("in")[1].trim() : expression;
+
         Object value = context.get(expression);
 
         if (value instanceof List<?>) {
@@ -118,12 +124,20 @@ public class Template {
         }
     }
 
-    private Node findElseNode(Node ifNode) {
+    private Node findElseNode(Node ifNode, TemplateContext context) {
+        boolean elseFound = false;
+        System.out.println("ifNode.parent.children: " + ifNode.parent.children);
+
         for (Node sibling : ifNode.parent.children) {
-            if (sibling.type == NodeType.ELSE || sibling.type == NodeType.ELSEIF) {
+            if (elseFound && (sibling.type == NodeType.ELSE || sibling.type == NodeType.ELSEIF)) {
                 return sibling;
             }
+
+            if (sibling == ifNode) {
+                elseFound = true;
+            }
         }
+
         return null;
     }
 

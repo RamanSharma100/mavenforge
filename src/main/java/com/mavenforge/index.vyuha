@@ -11,8 +11,15 @@
     <h1>{{ greeting }}</h1>
 
     <ul>
-        {if items != null}
+        {if showItems == false}
+
         <li>No items available</li>
+
+
+        {else}
+
+        <li>Items are:</li>
+
         {/if}
 
         {for item in items}

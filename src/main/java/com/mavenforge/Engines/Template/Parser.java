@@ -19,20 +19,11 @@ public class Parser {
 
         for (int i = 0; i < template.length(); i++) {
             if (template.charAt(i) == '{' && i < template.length() - 1) {
-                if (template.charAt(i + 1) == '{') {
+                if (template.charAt(i + 1) == '/') {
                     if (i > start) {
                         String text = template.substring(start, i);
                         this.current.children.add(new TextNode(text));
                     }
-                    int end = template.indexOf("}}", i);
-                    if (end == -1) {
-                        throw new IllegalArgumentException("Unclosed interpolation");
-                    }
-                    String content = template.substring(i + 2, end).trim();
-                    this.current.children.add(new Node(content, NodeType.INTERPOLATION));
-                    i = end + 1;
-                    start = i + 1;
-                } else if (template.charAt(i + 1) == '/') {
                     int end = template.indexOf("}", i);
                     if (end == -1) {
                         throw new IllegalArgumentException("Unclosed end block");
@@ -46,8 +37,21 @@ public class Parser {
                         throw new IllegalArgumentException("Mismatched end block");
                     }
                     this.current = temp.parent;
-                    i = end;
-                    start = i + 1;
+                    i = end + 1;
+                    start = i;
+                } else if (template.charAt(i + 1) == '{') {
+                    if (i > start) {
+                        String text = template.substring(start, i);
+                        this.current.children.add(new TextNode(text));
+                    }
+                    int end = template.indexOf("}}", i);
+                    if (end == -1) {
+                        throw new IllegalArgumentException("Unclosed interpolation");
+                    }
+                    String content = template.substring(i + 2, end).trim();
+                    this.current.children.add(new Node(content, NodeType.INTERPOLATION));
+                    i = end + 2;
+                    start = i;
                 } else {
                     if (i > start) {
                         String text = template.substring(start, i);
@@ -63,8 +67,9 @@ public class Parser {
                     this.current.children.add(newNode);
                     newNode.parent = this.current;
                     this.current = newNode;
-                    i = end;
-                    start = i + 1;
+                    i = end + 1;
+                    start = i;
+
                 }
             }
         }
@@ -81,9 +86,10 @@ public class Parser {
     private NodeType getBlockType(String content) {
         if (content.startsWith("if")) {
             return NodeType.IF;
-        } else if (content.startsWith("else if")) {
-            return NodeType.ELSEIF;
         } else if (content.startsWith("else")) {
+            if (content.startsWith("elseif")) {
+                return NodeType.ELSEIF;
+            }
             return NodeType.ELSE;
         } else if (content.startsWith("for")) {
             return NodeType.FOR;
