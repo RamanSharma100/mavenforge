@@ -37,8 +37,8 @@ public class Parser {
                         throw new IllegalArgumentException("Mismatched end block");
                     }
                     this.current = temp.parent;
-                    i = end + 1;
-                    start = i;
+                    i = end;
+                    start = i + 1;
                 } else if (template.charAt(i + 1) == '{') {
                     if (i > start) {
                         String text = template.substring(start, i);
@@ -67,8 +67,8 @@ public class Parser {
                     this.current.children.add(newNode);
                     newNode.parent = this.current;
                     this.current = newNode;
-                    i = end + 1;
-                    start = i;
+                    i = end;
+                    start = i + 1;
 
                 }
             }

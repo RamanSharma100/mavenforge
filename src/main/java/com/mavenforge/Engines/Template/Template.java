@@ -51,7 +51,6 @@ public class Template {
                 break;
             case IF:
                 boolean condition = evaluateCondition(node.content, context);
-                System.out.println("condition: " + node.content);
                 if (condition) {
                     System.out.println("node.children: " + node.children);
                     for (Node child : node.children) {
@@ -60,7 +59,6 @@ public class Template {
                     }
                 } else {
                     Node elseNode = findElseNode(node, context);
-                    System.out.println("elseNode: " + elseNode);
                     if (elseNode != null) {
                         for (Node child : elseNode.children) {
                             result.append(execute(child, context));
@@ -125,19 +123,18 @@ public class Template {
     }
 
     private Node findElseNode(Node ifNode, TemplateContext context) {
-        boolean elseFound = false;
-        System.out.println("ifNode.parent.children: " + ifNode.parent.children);
-
-        for (Node sibling : ifNode.parent.children) {
-            if (elseFound && (sibling.type == NodeType.ELSE || sibling.type == NodeType.ELSEIF)) {
-                return sibling;
-            }
-
-            if (sibling == ifNode) {
-                elseFound = true;
+        for (Node child : ifNode.children) {
+            System.out.println("child: " + child);
+            if (child.type == NodeType.ELSE || child.type == NodeType.ELSEIF) {
+                if (child.type == NodeType.ELSE) {
+                    return child;
+                }
+                boolean condition = evaluateCondition(child.content.replace("else", ""), context);
+                if (condition) {
+                    return child;
+                }
             }
         }
-
         return null;
     }
 

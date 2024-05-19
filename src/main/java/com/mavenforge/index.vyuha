@@ -15,10 +15,22 @@
 
         <li>No items available</li>
 
+        {elseif showItems === "data"}
+
+        <li>These Items are:-</li>
+        {/elseif}
+
+        {elseif showItems == "" }
+
+        <li>These Items are 2:-</li>
+        {for item in items}
+        <li>{{ item }}</li>
+        {/for}
+        {/elseif}
 
         {else}
 
-        <li>Items are:</li>
+        <li>Items not avalaible</li>
 
         {/if}
 
