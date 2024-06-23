@@ -19,10 +19,11 @@ public class Template {
 
     public String render(TemplateContext context) {
         try {
+
             return this.execute(root, context);
+
         } catch (TemplateException e) {
-            e.printStackTrace();
-            return "";
+            return e.toString();
         }
     }
 
@@ -52,9 +53,7 @@ public class Template {
             case IF:
                 boolean condition = evaluateCondition(node.content, context);
                 if (condition) {
-                    System.out.println("node.children: " + node.children);
                     for (Node child : node.children) {
-                        System.out.println("child: " + child);
                         result.append(execute(child, context));
                     }
                 } else {
@@ -124,7 +123,6 @@ public class Template {
 
     private Node findElseNode(Node ifNode, TemplateContext context) {
         for (Node child : ifNode.children) {
-            System.out.println("child: " + child);
             if (child.type == NodeType.ELSE || child.type == NodeType.ELSEIF) {
                 if (child.type == NodeType.ELSE) {
                     return child;
@@ -135,6 +133,22 @@ public class Template {
                 }
             }
         }
+        return null;
+    }
+
+    @SuppressWarnings("unused")
+    private Node findExtendsNode(Node node) {
+        if (node.type == NodeType.EXTENDS) {
+            return node;
+        }
+
+        for (Node child : node.children) {
+            Node result = findExtendsNode(child);
+            if (result != null) {
+                return result;
+            }
+        }
+
         return null;
     }
 

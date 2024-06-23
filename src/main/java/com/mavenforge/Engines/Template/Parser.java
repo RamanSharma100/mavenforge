@@ -1,5 +1,7 @@
 package com.mavenforge.Engines.Template;
 
+import java.util.Map;
+
 class TextNode extends Node {
 
     public TextNode(String text) {
@@ -37,8 +39,8 @@ public class Parser {
                         throw new IllegalArgumentException("Mismatched end block");
                     }
                     this.current = temp.parent;
-                    i = end;
-                    start = i + 1;
+                    i = end + 1;
+                    start = i;
                 } else if (template.charAt(i + 1) == '{') {
                     if (i > start) {
                         String text = template.substring(start, i);
@@ -67,10 +69,30 @@ public class Parser {
                     this.current.children.add(newNode);
                     newNode.parent = this.current;
                     this.current = newNode;
-                    i = end;
-                    start = i + 1;
+                    i = end + 1;
+                    start = i;
 
                 }
+            } else if (template.charAt(i) == '@') {
+                int end = template.indexOf("\n", i);
+                if (end == -1) {
+                    end = template.length();
+                }
+                String content = template.substring(i, end).trim();
+                NodeType blockType = getBlockType(content);
+
+                Node newNode = new Node(content, blockType);
+                this.current.children.add(newNode);
+                newNode.parent = this.current;
+
+                if (blockType == NodeType.EXTENDS || blockType == NodeType.BLOCK || blockType == NodeType.ENDBLOCK) {
+                    this.current = newNode.parent;
+                } else {
+                    this.current = newNode;
+                }
+
+                i = end;
+                start = i;
             }
         }
         if (start < template.length()) {
@@ -93,8 +115,42 @@ public class Parser {
             return NodeType.ELSE;
         } else if (content.startsWith("for")) {
             return NodeType.FOR;
+        } else if (content.startsWith("@extends")) {
+            return NodeType.EXTENDS;
+        } else if (content.startsWith("@block")) {
+            return NodeType.BLOCK;
+        } else if (content.startsWith("@endblock")) {
+            return NodeType.ENDBLOCK;
         } else {
             throw new IllegalArgumentException("Unknown block type");
         }
+    }
+
+    public String combineBlocksWithTemplate(Node root, Map<String, String> blockContents) {
+        StringBuilder result = new StringBuilder();
+
+        for (Node children : root.children) {
+            if (children.type == NodeType.BLOCK) {
+                String blockName = children.content.substring(6).trim();
+                String blockContent = blockContents.getOrDefault(blockName, getNodeContent(children));
+                result.append(blockContent);
+            } else {
+                result.append(getNodeContent(children));
+            }
+        }
+
+        return result.toString();
+    }
+
+    private String getNodeContent(Node node) {
+        StringBuilder result = new StringBuilder();
+        for (Node children : node.children) {
+            if (children.type == NodeType.TEXT || children.type == NodeType.INTERPOLATION) {
+                result.append(children.content);
+            } else {
+                result.append(getNodeContent(children));
+            }
+        }
+        return result.toString();
     }
 }

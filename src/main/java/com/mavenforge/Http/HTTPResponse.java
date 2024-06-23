@@ -1,8 +1,12 @@
 package com.mavenforge.Http;
 
+import java.util.Map;
 import java.net.Socket;
 import java.io.PrintWriter;
 import java.io.IOException;
+
+import com.mavenforge.Renderers.View;
+import com.mavenforge.Utils.Constants;
 
 public class HTTPResponse {
 
@@ -11,13 +15,21 @@ public class HTTPResponse {
     private HTTPRequest request;
     private int responseByte, statusCode;
     private Boolean statusCodeWrote = false;
+    private String VIEWS_DIR = "views";
     private long startTime, endTime, responseTime;
+    public transient static String rootClassPackage = Constants.rootClassPackage;
 
     public HTTPResponse(Socket socket, HTTPRequest request) throws IOException {
         this.socket = socket;
         this.request = request;
         this.startTime = request.getStartTime();
         this.writer = new PrintWriter(socket.getOutputStream(), true);
+        if (Constants.env != null) {
+            String viewsDir = Constants.env.get("VIEWS_DIR");
+            if (viewsDir != null) {
+                this.VIEWS_DIR = viewsDir;
+            }
+        }
     }
 
     public HTTPResponse response(String body) {
@@ -66,6 +78,16 @@ public class HTTPResponse {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public HTTPResponse render(String viewName) {
+        String view = View.render(viewName, this.VIEWS_DIR);
+        return this.response(view);
+    }
+
+    public HTTPResponse render(String viewName, Map<String, Object> data) {
+        String view = View.render(viewName, data, this.VIEWS_DIR);
+        return this.response(view);
     }
 
     private String getStatusText(int code) {

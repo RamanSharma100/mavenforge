@@ -1,12 +1,14 @@
 package com.mavenforge;
 
 import java.net.ServerSocket;
+import io.github.cdimascio.dotenv.Dotenv;
 
 import com.mavenforge.Http.Router;
 import com.mavenforge.Http.HTTPRequest;
 import com.mavenforge.Http.HTTPResponse;
 import com.mavenforge.Server.HTTPServer;
 import com.mavenforge.Utils.Validation;
+import com.mavenforge.Utils.Constants;
 
 public class Application {
     public static Router router;
@@ -19,17 +21,26 @@ public class Application {
             Class<?> context,
             String[] args) {
 
+        System.out.println("-------------------------------------------");
+        System.out.println("Welcome to MavenForge Java MVC Framework");
+        System.out.println("-------------------------------------------");
+
         String rootClassPackage = context.getPackageName();
 
         Application.rootClassPackage = rootClassPackage;
+        Constants.rootClassPackage = rootClassPackage;
+
+        System.out.println("Loading environment variables...");
+
+        Dotenv dotenv = Dotenv.load();
+
+        Constants.env = dotenv;
+
+        System.out.println("Environment variables loaded.");
 
         int port = getPort(args);
 
         HTTPServer server = new HTTPServer(port);
-
-        System.out.println("-------------------------------------------");
-        System.out.println("Welcome to MavenForge Java MVC Framework");
-        System.out.println("-------------------------------------------");
 
         System.out.println("Starting Development server...");
 

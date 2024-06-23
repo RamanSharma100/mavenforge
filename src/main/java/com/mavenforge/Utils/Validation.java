@@ -5,10 +5,8 @@ import com.mavenforge.Application;
 import java.lang.ClassNotFoundException;
 
 public class Validation {
-    public static boolean isRoutesFilePresent(
-            String packageName) {
+    public static boolean isRoutesFilePresent(String packageName) {
         try {
-
             String routesPackage = Application.rootClassPackage + ".routes.Web";
             Class<?> routesClass = ImportClass.fromPackage(routesPackage);
 
@@ -21,7 +19,6 @@ public class Validation {
             e.printStackTrace();
             return false;
         }
-
     }
 
 }
