@@ -4,6 +4,8 @@ import java.net.ServerSocket;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import com.mavenforge.Http.Router;
+import com.mavenforge.Database.Database;
+import com.mavenforge.Factories.DatabaseFactory;
 import com.mavenforge.Http.HTTPRequest;
 import com.mavenforge.Http.HTTPResponse;
 import com.mavenforge.Server.HTTPServer;
@@ -12,6 +14,7 @@ import com.mavenforge.Utils.Constants;
 
 public class Application {
     public static Router router;
+    public static Database database;
     public static ServerSocket server;
     public static HTTPRequest request;
     public static HTTPResponse response;
@@ -43,6 +46,15 @@ public class Application {
         HTTPServer server = new HTTPServer(port);
 
         System.out.println("Starting Development server...");
+
+        boolean isDbEnabled = Boolean.parseBoolean(dotenv.get("ENABLE_DATABASE", "false"));
+
+        if (isDbEnabled) {
+            Database db = DatabaseFactory.getDatabase();
+            Application.database = db;
+        } else {
+            System.out.println("Database disabled.");
+        }
 
         if (!Validation.isRoutesFilePresent(rootClassPackage)) {
             System.err.println(

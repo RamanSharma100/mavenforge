@@ -11,6 +11,10 @@ public class Constants {
     public static String rootClassPackage = null;
     public static final String TEMPLATE_EXTENSION = ".vyuha";
 
+    public static enum DatabaseType {
+        mysql, postgresql, sqlite, mongodb
+    }
+
     public static void setRootClassPackage(String rootClassPackage) {
         Constants.rootClassPackage = rootClassPackage;
     }
