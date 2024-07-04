@@ -17,6 +17,10 @@ public class MySQLSchema {
         this.table = table;
     }
 
+    public MySQLSchema id() {
+        return this.id("id");
+    }
+
     public MySQLSchema id(String columnName) {
         Map<String, Object> column = new HashMap<>();
         column.put("name", columnName);
@@ -320,7 +324,7 @@ public class MySQLSchema {
         return this;
     }
 
-    public MySQLSchema unique(String columnName) {
+    public MySQLSchema unique() {
         this.columns.get(this.columns.size() - 1).put("unique", true);
         return this;
     }
