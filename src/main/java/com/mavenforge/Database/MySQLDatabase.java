@@ -8,6 +8,7 @@ import com.mavenforge.Contracts.Databases.SQLDatabaseContract;
 
 public class MySQLDatabase extends SQLDatabaseContract {
     Connection connection = null;
+    String table = "";
     String query = "";
 
     public MySQLDatabase(String connectionString) {
@@ -19,6 +20,10 @@ public class MySQLDatabase extends SQLDatabaseContract {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString());
         }
+    }
+
+    public void setTable(String table) {
+        this.table = table;
     }
 
     public void executeQuery(String query) {
@@ -53,6 +58,19 @@ public class MySQLDatabase extends SQLDatabaseContract {
             preparedQuery.execute();
         } catch (SQLException e) {
             throw new RuntimeException("Could not create the table. Please check your query.");
+        }
+    }
+
+    public void select(String columns, String condition) {
+        query = "SELECT ? FROM ? WHERE ?";
+        try {
+            PreparedStatement preparedQuery = connection.prepareStatement(query);
+            preparedQuery.setString(1, columns);
+            preparedQuery.setString(2, table);
+            preparedQuery.setString(3, condition);
+            preparedQuery.execute();
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not select from the table. Please check your query.");
         }
     }
 
@@ -126,5 +144,14 @@ public class MySQLDatabase extends SQLDatabaseContract {
             throw new RuntimeException("Could not close the connection.");
         }
     }
+
+    // /*
+    // * Database main queries functions
+    // */
+
+    // public Object all() {
+    // String query = "SELECT * FROM " + table;
+    // return customQuery(query);
+    // }
 
 }

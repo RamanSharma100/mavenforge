@@ -4,8 +4,8 @@ import com.mavenforge.Utils.Constants;
 import com.mavenforge.Utils.Constants.DatabaseType;
 
 public class Database {
-    Object db = null;
-    DatabaseType databaseType = DatabaseType.mysql;
+    public Object db = null;
+    public DatabaseType databaseType = DatabaseType.mysql;
 
     public Database() {
         String databaseUser = Constants.env.get("DATABASE_USER", "root");
