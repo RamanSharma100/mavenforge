@@ -11,7 +11,9 @@ import com.mavenforge.Database.MySQLDatabase;
 public class MySQLSchema {
     private String table;
     private StringBuilder sql = new StringBuilder();
+    private List<String> constraints = new ArrayList<>();
     private List<Map<String, Object>> columns = new ArrayList<>();
+    private List<Map<String, Object>> foreignKeys = new ArrayList<>();
 
     public MySQLSchema(String table) {
         this.table = table;
@@ -324,6 +326,167 @@ public class MySQLSchema {
         return this;
     }
 
+    public MySQLSchema foreignKey(String referenceTable, String referenceColumn) {
+        Map<String, Object> currentColumn = this.columns.get(this.columns.size() - 1);
+
+        Map<String, Object> foreignKey = new HashMap<>();
+        foreignKey.put("column", currentColumn.get("name"));
+        foreignKey.put("reference_table", referenceTable);
+        foreignKey.put("reference_column", referenceColumn);
+        this.foreignKeys.add(foreignKey);
+
+        return this;
+    }
+
+    public MySQLSchema onDeleteCascade() {
+
+        if (this.foreignKeys.size() == 0) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        Map<String, Object> currentForeignKey = this.foreignKeys.get(this.foreignKeys.size() - 1);
+
+        if (!currentForeignKey.containsKey("column")) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        this.foreignKeys.get(this.foreignKeys.size() - 1).put("on_delete", "CASCADE");
+        return this;
+    }
+
+    public MySQLSchema onDeleteSetNull() {
+
+        if (this.foreignKeys.size() == 0) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        Map<String, Object> currentForeignKey = this.foreignKeys.get(this.foreignKeys.size() - 1);
+
+        if (!currentForeignKey.containsKey("column")) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        this.foreignKeys.get(this.foreignKeys.size() - 1).put("on_delete", "SET NULL");
+        return this;
+    }
+
+    public MySQLSchema onDeleteNoAction() {
+
+        if (this.foreignKeys.size() == 0) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        Map<String, Object> currentForeignKey = this.foreignKeys.get(this.foreignKeys.size() - 1);
+
+        if (!currentForeignKey.containsKey("column")) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        this.foreignKeys.get(this.foreignKeys.size() - 1).put("on_delete", "NO ACTION");
+        return this;
+    }
+
+    public MySQLSchema onDeleteRestrict() {
+
+        if (this.foreignKeys.size() == 0) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        Map<String, Object> currentForeignKey = this.foreignKeys.get(this.foreignKeys.size() - 1);
+
+        if (!currentForeignKey.containsKey("column")) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        this.foreignKeys.get(this.foreignKeys.size() - 1).put("on_delete", "RESTRICT");
+        return this;
+    }
+
+    public MySQLSchema onUpdateCascade() {
+
+        if (this.foreignKeys.size() == 0) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        Map<String, Object> currentForeignKey = this.foreignKeys.get(this.foreignKeys.size() - 1);
+
+        if (!currentForeignKey.containsKey("column")) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        this.foreignKeys.get(this.foreignKeys.size() - 1).put("on_update", "CASCADE");
+        return this;
+    }
+
+    public MySQLSchema onUpdateSetNull() {
+
+        if (this.foreignKeys.size() == 0) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        Map<String, Object> currentForeignKey = this.foreignKeys.get(this.foreignKeys.size() - 1);
+
+        if (!currentForeignKey.containsKey("column")) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        this.foreignKeys.get(this.foreignKeys.size() - 1).put("on_update", "SET NULL");
+        return this;
+    }
+
+    public MySQLSchema onUpdateNoAction() {
+
+        if (this.foreignKeys.size() == 0) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        Map<String, Object> currentForeignKey = this.foreignKeys.get(this.foreignKeys.size() - 1);
+
+        if (!currentForeignKey.containsKey("column")) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        this.foreignKeys.get(this.foreignKeys.size() - 1).put("on_update", "NO ACTION");
+        return this;
+    }
+
+    public MySQLSchema onUpdateRestrict() {
+
+        if (this.foreignKeys.size() == 0) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        Map<String, Object> currentForeignKey = this.foreignKeys.get(this.foreignKeys.size() - 1);
+
+        if (!currentForeignKey.containsKey("column")) {
+            System.out.println("You need to create a foreign key first");
+            return this;
+        }
+
+        this.foreignKeys.get(this.foreignKeys.size() - 1).put("on_update", "RESTRICT");
+        return this;
+    }
+
+    public MySQLSchema compositeKey(String... columns) {
+        this.constraints.add("PRIMARY KEY (" + String.join(",", columns) + ")");
+        return this;
+    }
+
     public MySQLSchema unique() {
         this.columns.get(this.columns.size() - 1).put("unique", true);
         return this;
@@ -405,8 +568,28 @@ public class MySQLSchema {
             this.sql.append(",");
 
         }
+        // this.sql.setLength(this.sql.length() - 1);
 
-        this.sql.setLength(this.sql.length() - 1);
+        this.sql = new StringBuilder(this.sql.substring(0, this.sql.length() - 1));
+
+        for (Map<String, Object> foreignKey : this.foreignKeys) {
+            this.sql.append(", FOREIGN KEY (`" + foreignKey.get("column") + "`) REFERENCES `"
+                    + foreignKey.get("reference_table") + "`(`" + foreignKey.get("reference_column") + "`)");
+
+            if (foreignKey.containsKey("on_delete")) {
+                this.sql.append(" ON DELETE " + foreignKey.get("on_delete"));
+            }
+
+            if (foreignKey.containsKey("on_update")) {
+                this.sql.append(" ON UPDATE " + foreignKey.get("on_update"));
+            }
+
+        }
+
+        for (String constraint : this.constraints) {
+            this.sql.append(", " + constraint);
+        }
+
         this.sql.append(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
         return this.sql.toString();
