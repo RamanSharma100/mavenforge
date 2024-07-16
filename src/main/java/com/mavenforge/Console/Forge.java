@@ -17,7 +17,7 @@ public class Forge {
         System.out.println();
         System.out.println("help                                Display help");
         System.out.println("serve                               Start the server");
-        System.out.println("migrate [options]                   Run the migrations");
+        System.out.println("databse <DBScaffold> [options]      Run the migrations");
         System.out.println("make <scaffold> <name> [options]    Generate a scaffold");
         System.out.println();
         System.out.println("Scaffold:");
@@ -27,6 +27,15 @@ public class Forge {
         System.out.println("model <name> [options]          Generate a model");
         System.out.println("migration <name> [options]      Generate a migration");
         System.out.println("controller <name> [options]     Generate a controller");
+        System.out.println();
+        System.out.println("DBScaffold:");
+        System.out.println();
+        System.out.println("drop <name> [options]           Drop a database");
+        System.out.println("create <name> [options]         Create a database");
+        System.out.println("dump <name> [options]           Dump the database");
+        System.out.println("migrate <name> [options]        Run the migrations");
+        System.out.println("rollback <name> [options]       Rollback the migrations");
+
     }
 
     public static void main(String[] args) {
@@ -51,9 +60,12 @@ public class Forge {
 
             switch (command) {
                 case "serve":
-                    System.out.println(getPackageName());
                     Executer executer = new Executer();
                     executer.defaultCommands.get("serve").execute(commandArgs, packageName);
+                    break;
+                case "migrate":
+                    Executer executer1 = new Executer();
+                    executer1.defaultCommands.get("migrate").execute(commandArgs, packageName);
                     break;
                 default:
                     System.out.println("Command not found");
