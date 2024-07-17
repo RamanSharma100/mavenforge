@@ -1,19 +1,30 @@
 package com.mavenforge.Database;
 
-import com.mavenforge.Utils.Constants;
+import io.github.cdimascio.dotenv.Dotenv;
+
 import com.mavenforge.Utils.Constants.DatabaseType;
 
 public class Database {
     public Object db = null;
     public DatabaseType databaseType = DatabaseType.mysql;
+    private Dotenv env = Dotenv.configure().load();
 
     public Database() {
-        String databaseUser = Constants.env.get("DATABASE_USER", "root");
-        String databasePassword = Constants.env.get("DATABASE_PASSWORD", "");
-        String databaseHost = Constants.env.get("DATABASE_HOST", "localhost");
-        String databaseName = Constants.env.get("DATABASE_NAME", "mavenforge");
-        int databasePort = Integer.parseInt(Constants.env.get("DATABASE_PORT", "3306"));
-        String databaseType = Constants.env.get("DATABASE_TYPE", Constants.DatabaseType.mysql.toString());
+        boolean databaseEnabled = Boolean.parseBoolean(this.env.get("ENABLE_DATABASE", "false"));
+
+        if (!databaseEnabled) {
+            System.out.println("Database is not enabled. Please enable the database in the .env file.");
+            System.out.println("Exiting...");
+            System.exit(0);
+            return;
+        }
+
+        String databaseUser = this.env.get("DATABASE_USER", "root");
+        String databasePassword = this.env.get("DATABASE_PASSWORD", "");
+        String databaseHost = this.env.get("DATABASE_HOST", "localhost");
+        String databaseName = this.env.get("DATABASE_NAME", "mavenforge");
+        int databasePort = Integer.parseInt(this.env.get("DATABASE_PORT", "3306"));
+        String databaseType = this.env.get("DATABASE_TYPE", DatabaseType.mysql.toString());
 
         switch (databaseType) {
             case "mysql":

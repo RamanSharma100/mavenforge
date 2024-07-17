@@ -17,7 +17,7 @@ public class Forge {
         System.out.println();
         System.out.println("help                                Display help");
         System.out.println("serve                               Start the server");
-        System.out.println("databse <DBScaffold> [options]      Run the migrations");
+        System.out.println("databse <DBScaffold> [options]      Work with the database");
         System.out.println("make <scaffold> <name> [options]    Generate a scaffold");
         System.out.println();
         System.out.println("Scaffold:");
@@ -63,9 +63,9 @@ public class Forge {
                     Executer executer = new Executer();
                     executer.defaultCommands.get("serve").execute(commandArgs, packageName);
                     break;
-                case "migrate":
+                case "database":
                     Executer executer1 = new Executer();
-                    executer1.defaultCommands.get("migrate").execute(commandArgs, packageName);
+                    executer1.defaultCommands.get("database").execute(commandArgs, packageName);
                     break;
                 default:
                     System.out.println("Command not found");

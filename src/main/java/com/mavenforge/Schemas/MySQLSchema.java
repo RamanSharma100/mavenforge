@@ -183,9 +183,8 @@ public class MySQLSchema {
             {
                 put("name", "updated_at");
                 put("type", "TIMESTAMP");
-                put("nullable", false);
+                put("nullable", true);
                 put("on_update", "CURRENT_TIMESTAMP");
-                put("default", "CURRENT_TIMESTAMP");
             }
         });
 
