@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.mavenforge.Application;
 import com.mavenforge.Database.Database;
 import com.mavenforge.Database.MySQLDatabase;
 
@@ -183,7 +184,8 @@ public class MySQLSchema {
             {
                 put("name", "updated_at");
                 put("type", "TIMESTAMP");
-                put("nullable", true);
+                put("nullable", false);
+                put("default", "CURRENT_TIMESTAMP");
                 put("on_update", "CURRENT_TIMESTAMP");
             }
         });
@@ -594,18 +596,22 @@ public class MySQLSchema {
         return this.sql.toString();
     }
 
-    public void migrate() {
-
-    }
-
     public void drop() {
         this.sql.append("DROP TABLE IF EXISTS `" + this.table + "`;");
         this.execute();
     }
 
     public void execute() {
-        Database database = new Database();
+        Database database = Application.database;
+
+        if (Application.database == null) {
+            database = new Database();
+            Application.database = database;
+        }
+
         MySQLDatabase db = (MySQLDatabase) database.db;
         db.executeQuery(this.sql.toString());
+        this.sql = new StringBuilder();
     }
+
 }

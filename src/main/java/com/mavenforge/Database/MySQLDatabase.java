@@ -22,6 +22,17 @@ public class MySQLDatabase extends SQLDatabaseContract {
         }
     }
 
+    public MySQLDatabase(String connectionString, boolean isCLI) {
+        super(connectionString, "com.mysql.cj.jdbc.Driver");
+        try {
+
+            connection = this.connect();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString());
+        }
+    }
+
     public void setTable(String table) {
         this.table = table;
     }
@@ -30,8 +41,15 @@ public class MySQLDatabase extends SQLDatabaseContract {
         this.query = query;
         try {
             connection.createStatement().execute(query);
+
         } catch (SQLException e) {
-            throw new RuntimeException("Could not execute the query. Please check your query.");
+            throw new RuntimeException("Could not execute the query. Please check your query. Error:" + e.toString());
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new RuntimeException("Could not close the connection.");
+            }
         }
     }
 
@@ -46,6 +64,12 @@ public class MySQLDatabase extends SQLDatabaseContract {
             preparedQuery.execute();
         } catch (SQLException e) {
             throw new RuntimeException("Could not execute the query. Please check your query.");
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new RuntimeException("Could not close the connection.");
+            }
         }
     }
 
@@ -58,6 +82,12 @@ public class MySQLDatabase extends SQLDatabaseContract {
             preparedQuery.execute();
         } catch (SQLException e) {
             throw new RuntimeException("Could not create the table. Please check your query.");
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new RuntimeException("Could not close the connection.");
+            }
         }
     }
 

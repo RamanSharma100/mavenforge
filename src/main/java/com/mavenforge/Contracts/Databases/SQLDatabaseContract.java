@@ -29,19 +29,17 @@ public class SQLDatabaseContract extends DatabaseContract {
         } catch (SQLException e) {
             System.err.println(e.toString());
             throw new SQLException(e.toString());
-        } finally {
-            if (connection != null) {
-                connection.close();
-            }
-
-        }
+        } 
 
     }
 
     private Connection getConnection() throws SQLException {
         String connectionString = this.connectionString;
 
-        return DriverManager.getConnection(connectionString);
+        Connection connection = DriverManager.getConnection(connectionString);
+
+
+        return connection;
     }
 
     private boolean isDriverPresent() {
