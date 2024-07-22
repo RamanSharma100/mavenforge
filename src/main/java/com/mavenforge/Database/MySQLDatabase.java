@@ -2,6 +2,7 @@ package com.mavenforge.Database;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import com.mavenforge.Contracts.Databases.SQLDatabaseContract;
@@ -10,10 +11,13 @@ public class MySQLDatabase extends SQLDatabaseContract {
     Connection connection = null;
     String table = "";
     String query = "";
+    private String databaseName = "";
 
     public MySQLDatabase(String connectionString) {
         super(connectionString, "com.mysql.cj.jdbc.Driver");
         try {
+
+            this.databaseName = connectionString.substring(connectionString.lastIndexOf("/") + 1).split("\\?")[0];
 
             connection = this.connect();
             System.out.println("Connected to the database " + connection.getCatalog());
@@ -35,6 +39,35 @@ public class MySQLDatabase extends SQLDatabaseContract {
 
     public void setTable(String table) {
         this.table = table;
+    }
+
+    public ResultSet getSchema(String table) {
+        query = "SELECT * FROM information_schema.columns WHERE table_name = ? AND table_schema = ?";
+        try {
+            PreparedStatement preparedQuery = connection.prepareStatement(query);
+            preparedQuery.setString(1, table);
+            preparedQuery.setString(2, this.databaseName);
+            return preparedQuery.executeQuery();
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not get the schema. Please check your query.");
+        }
+    }
+
+    public void describeTable(String tableName) {
+        query = "DESCRIBE ?";
+        try {
+            PreparedStatement preparedQuery = connection.prepareStatement(query);
+            preparedQuery.setString(1, tableName);
+            preparedQuery.execute();
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not describe the table. Please check your query.");
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new RuntimeException("Could not close the connection.");
+            }
+        }
     }
 
     public void executeQuery(String query) {
@@ -81,12 +114,12 @@ public class MySQLDatabase extends SQLDatabaseContract {
             preparedQuery.setString(2, columns);
             preparedQuery.execute();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not create the table. Please check your query.");
+            throw new RuntimeException(e);
         } finally {
             try {
                 connection.close();
             } catch (SQLException e) {
-                throw new RuntimeException("Could not close the connection.");
+                throw new RuntimeException(e);
             }
         }
     }
@@ -100,18 +133,20 @@ public class MySQLDatabase extends SQLDatabaseContract {
             preparedQuery.setString(3, condition);
             preparedQuery.execute();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not select from the table. Please check your query.");
+            throw new RuntimeException(e);
         }
     }
 
     public void dropTable(String tableName) {
-        query = "DROP TABLE IF EXISTS ?";
-        try {
-            PreparedStatement preparedQuery = connection.prepareStatement(query);
-            preparedQuery.setString(1, tableName);
-            preparedQuery.execute();
-        } catch (SQLException e) {
-            throw new RuntimeException("Could not drop the table. Please check your query.");
+        if (!tableName.matches("[a-zA-Z0-9_]+")) {
+            throw new IllegalArgumentException("Invalid table name");
+        } else {
+            query = "DROP TABLE IF EXISTS " + tableName;
+            try {
+                connection.createStatement().execute(query);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -126,7 +161,7 @@ public class MySQLDatabase extends SQLDatabaseContract {
             }
             preparedQuery.execute();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not insert into the table. Please check your query.");
+            throw new RuntimeException(e);
         }
     }
 
@@ -142,7 +177,7 @@ public class MySQLDatabase extends SQLDatabaseContract {
             preparedQuery.setString(values.length + 3, condition);
             preparedQuery.execute();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not update the table. Please check your query.");
+            throw new RuntimeException(e);
         }
     }
 
@@ -154,7 +189,8 @@ public class MySQLDatabase extends SQLDatabaseContract {
             preparedQuery.setString(2, condition);
             preparedQuery.execute();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete from the table. Please check your query.");
+
+            throw new RuntimeException(e);
         }
     }
 

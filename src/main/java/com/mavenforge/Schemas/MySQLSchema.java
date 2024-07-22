@@ -1,5 +1,6 @@
 package com.mavenforge.Schemas;
 
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,8 @@ public class MySQLSchema {
     private List<String> constraints = new ArrayList<>();
     private List<Map<String, Object>> columns = new ArrayList<>();
     private List<Map<String, Object>> foreignKeys = new ArrayList<>();
+
+    private boolean dropTable = false;
 
     public MySQLSchema(String table) {
         this.table = table;
@@ -497,6 +500,119 @@ public class MySQLSchema {
         return this.sql.toString();
     }
 
+    public Map<String, Object> getColumn(String columnName) {
+        for (Map<String, Object> column : this.columns) {
+            if (column.get("name") == columnName) {
+                return column;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean isStructureChanged(MySQLDatabase db) {
+        List<Map<String, Object>> currentColumns = this.columns;
+
+        try {
+            ResultSet result = db.getSchema(this.table);
+
+            int columnCount = 0;
+
+            List<Map<String, Object>> previousColumns = new ArrayList<>();
+
+            while (result.next()) {
+                columnCount++;
+                Map<String, Object> column = new HashMap<>();
+                if (result.getString("COLUMN_NAME") != null) {
+                    column.put("name", result.getString("COLUMN_NAME"));
+                }
+
+                if (result.getString("DATA_TYPE") != null) {
+                    column.put("type", result.getString("DATA_TYPE"));
+                }
+
+                if (result.getString("COLUMN_TYPE") != null) {
+                    String columnType = result.getString("COLUMN_TYPE");
+                    column.put("type", columnType.toUpperCase());
+                }
+
+                if (result.getString("NUMERIC_SCALE") != null) {
+                    column.put("decimal_digits", result.getString("NUMERIC_SCALE"));
+                }
+
+                if (result.getString("IS_NULLABLE") != null) {
+                    column.put("nullable", result.getString("IS_NULLABLE").equals("YES") ? true : false);
+                }
+
+                if (result.getString("COLUMN_KEY") != null) {
+                    column.put("primary_key", result.getString("COLUMN_KEY").equals("PRI") ? true : false);
+                }
+
+                if (result.getString("COLUMN_KEY") != null) {
+                    column.put("unique", result.getString("COLUMN_KEY").equals("UNI") ? true : false);
+                }
+
+                if (result.getString("COLUMN_DEFAULT") != null
+                        && !result.getString("COLUMN_DEFAULT").equals("NULL")) {
+                    String defaultValue = result.getString("COLUMN_DEFAULT");
+                    if (defaultValue.endsWith("()")) {
+                        column.put("default", defaultValue.toUpperCase().replace("\'", "").replace("()", ""));
+                    } else {
+                        column.put("default", defaultValue.toUpperCase().replace("\'", ""));
+                    }
+                }
+
+                if (result.getString("EXTRA") != null) {
+                    if (result.getString("EXTRA").equals("auto_increment")) {
+                        column.put("auto_increment", true);
+                    }
+
+                    if (result.getString("EXTRA").contains("on update")) {
+                        String onUpdate = result.getString("EXTRA").split(" ")[2];
+
+                        if (onUpdate.endsWith("()")) {
+                            column.put("on_update", onUpdate.toUpperCase().replace("\'", "").replace("()", ""));
+                        } else {
+                            column.put("on_update", onUpdate.toUpperCase().replace("\'", ""));
+                        }
+                    }
+
+                }
+
+                previousColumns.add(column);
+            }
+
+            if (columnCount == 0) {
+                this.build();
+                return true;
+            }
+
+            this.columns = previousColumns;
+
+            String previousSchema = this.build();
+
+            this.columns = currentColumns;
+
+            this.sql = new StringBuilder();
+
+            this.build();
+
+            String currentSchema = this.getSchema();
+
+            if (previousSchema.equals(currentSchema)) {
+                return false;
+            } else {
+                System.out.println("Table " + this.table + "Schema has been changed, recreating table");
+                this.dropTable = true;
+                return true;
+            }
+
+        } catch (Exception e) {
+            throw new Error(e);
+        }
+
+    }
+
     public String build() {
 
         this.sql.append("CREATE TABLE IF NOT EXISTS `" + this.table + "` (");
@@ -516,8 +632,6 @@ public class MySQLSchema {
             if (column.containsKey("nullable")) {
                 if ((boolean) column.get("nullable") == false) {
                     this.sql.append(" NOT NULL");
-                } else {
-                    this.sql.append(" NULL");
                 }
             }
 
@@ -540,11 +654,7 @@ public class MySQLSchema {
             }
 
             if (column.containsKey("default")) {
-                if (column.get("default") == "CURRENT_TIMESTAMP") {
-                    this.sql.append(" DEFAULT " + column.get("default"));
-                } else {
-                    this.sql.append(" DEFAULT '" + column.get("default") + "'");
-                }
+                this.sql.append(" DEFAULT " + column.get("default"));
             }
 
             if (column.containsKey("values")) {
@@ -602,6 +712,7 @@ public class MySQLSchema {
     }
 
     public void execute() {
+
         Database database = Application.database;
 
         if (Application.database == null) {
@@ -609,9 +720,18 @@ public class MySQLSchema {
             Application.database = database;
         }
 
-        MySQLDatabase db = (MySQLDatabase) database.db;
-        db.executeQuery(this.sql.toString());
-        this.sql = new StringBuilder();
+        if (this.isStructureChanged(((MySQLDatabase) database.db))) {
+            MySQLDatabase db = (MySQLDatabase) database.db;
+            if (this.dropTable) {
+                System.out.println("Dropping table " + this.table);
+                db.dropTable(this.table);
+                System.out.println("Table " + this.table + " dropped");
+            }
+            db.executeQuery(this.sql.toString());
+            this.sql = new StringBuilder();
+
+        }
+
     }
 
 }

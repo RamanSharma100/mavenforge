@@ -18,7 +18,7 @@ public class Schema extends SchemaContract {
 
                 Consumer<MySQLSchema> consumer = (Consumer<MySQLSchema>) callback;
                 consumer.accept(blueprint);
-                blueprint.build();
+                // blueprint.build();
                 blueprint.execute();
                 break;
             default:
