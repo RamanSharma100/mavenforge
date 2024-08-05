@@ -5,8 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class ClassfileDecoder {
-    private String classFilePath = "";
-    private int minorVersion = 0, majorVersion = 0;
+    public String classFilePath = "";
+    public int minorVersion = 0, majorVersion = 0;
 
     public ClassfileDecoder() {
     }
@@ -24,8 +24,8 @@ public class ClassfileDecoder {
         return this.classFilePath;
     }
 
-    // decode the class file and return the full class
     public String decode() {
+        StringBuilder sb = new StringBuilder();
         try (DataInputStream dis = new DataInputStream(new FileInputStream(this.classFilePath));) {
             int magicNumber = dis.readInt();
 
@@ -39,7 +39,7 @@ public class ClassfileDecoder {
             int constantPoolCount = dis.readUnsignedShort();
             ConstantPoolEntry[] constantPool = new ConstantPoolEntry[constantPoolCount];
             for (int i = 1; i < constantPoolCount; i++) {
-                constantPool[i] = readPollEntry(dis);
+                constantPool[i] = readPoolEntry(dis);
 
                 if (constantPool[i] != null && (constantPool[i].getTag() == 5 || constantPool[i].getTag() == 6)) {
                     i++;
@@ -74,19 +74,45 @@ public class ClassfileDecoder {
                 attributes[i] = AttributeInfo.readAttributeInfo(dis, constantPool);
             }
 
-            System.out.println("Access Flags: " + accessFlags);
-            System.out.println("This Class: " + thisClass);
-            System.out.println("Super Class: " + superClass);
+            sb.append(getFormattedAccessFlags(accessFlags))
+                    .append("class ")
+                    .append(getConstantPoolClassName(thisClass, constantPool));
+
+            if (superClass != 0 && superClass != 1) {
+                sb.append(" extends ")
+                        .append(getConstantPoolClassName(superClass, constantPool));
+            }
+
+            if (interfacesCount > 0) {
+                sb.append(" implements ");
+                for (int i = 0; i < interfacesCount; i++) {
+                    sb.append(getConstantPoolClassName(interfaces[i], constantPool));
+                    if (i < interfacesCount - 1) {
+                        sb.append(", ");
+                    }
+                }
+            }
+
+            sb.append(" {\n");
+
+            for (FieldInfo field : fields) {
+                sb.append(field).append("\n");
+            }
+
+            for (MethodInfo method : methods) {
+                sb.append(method).append("\n");
+            }
+
+            sb.append("}");
 
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.toString());
+            throw new RuntimeException(e);
         }
 
-        return "";
+        return sb.toString();
     }
 
-    private static ConstantPoolEntry readPollEntry(DataInputStream dis) throws IOException {
+    private static ConstantPoolEntry readPoolEntry(DataInputStream dis) throws IOException {
         int tag = dis.readUnsignedByte();
 
         switch (tag) {
@@ -107,17 +133,54 @@ public class ClassfileDecoder {
             case 6:
                 return new ConstantPoolEntry(tag, dis.readDouble());
             case 12:
-                return new ConstantPoolEntry(tag, dis.readUnsignedByte(), dis.readUnsignedByte());
+                return new ConstantPoolEntry(tag, dis.readUnsignedShort(), dis.readUnsignedShort());
             case 1:
                 int length = dis.readUnsignedShort();
                 byte[] bytes = new byte[length];
                 dis.readFully(bytes);
                 return new ConstantPoolEntry(tag, new String(bytes, "UTF-8"));
             default:
-
                 throw new IOException("Invalid tag (constant pool): " + tag);
         }
 
     }
 
+    private static String getFormattedAccessFlags(int accessFlags) {
+        StringBuilder sb = new StringBuilder();
+
+        if ((accessFlags & 0x0001) != 0)
+            sb.append("public ");
+        if ((accessFlags & 0x0010) != 0)
+            sb.append("final ");
+        if ((accessFlags & 0x0020) != 0)
+            sb.append("super ");
+        if ((accessFlags & 0x0200) != 0)
+            sb.append("interface ");
+        if ((accessFlags & 0x0400) != 0)
+            sb.append("abstract ");
+        if ((accessFlags & 0x1000) != 0)
+            sb.append("synthetic ");
+        if ((accessFlags & 0x2000) != 0)
+            sb.append("annotation ");
+        if ((accessFlags & 0x4000) != 0)
+            sb.append("enum ");
+
+        return sb.toString();
+    }
+
+    private static String getConstantPoolClassName(int index, ConstantPoolEntry[] constantPool) {
+        if (index == 0 || index >= constantPool.length) {
+            return "";
+        }
+
+        ConstantPoolEntry entry = constantPool[index];
+        if (entry.getTag() == 7) {
+            int nameIndex = (int) entry.getValue();
+            entry = constantPool[nameIndex];
+            if (entry.getTag() == 1) {
+                return (String) entry.getValue();
+            }
+        }
+        return "";
+    }
 }

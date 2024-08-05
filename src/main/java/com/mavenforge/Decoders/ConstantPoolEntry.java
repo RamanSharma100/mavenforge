@@ -7,7 +7,6 @@ public class ConstantPoolEntry {
 
     public ConstantPoolEntry(int tag, Object value) {
         this(tag, value, null);
-        System.out.println("tag: " + tag + ", value: " + value);
     }
 
     public ConstantPoolEntry(int tag, Object value, Object additionalValue) {
