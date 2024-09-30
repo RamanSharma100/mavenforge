@@ -147,6 +147,7 @@ public class Router {
             }
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException
                 | NoSuchMethodException e) {
+            System.out.println(e);
             response.status(500)
                     .response("Error invoking method '" + methodName + "' in controller '" + controllerPackage + "'")
                     .send();

@@ -1,10 +1,13 @@
 package com.mavenforge.Database;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import com.mavenforge.Decoders.ClassfileDecoder;
+import com.mavenforge.Decoders.ClassFile.ClassNode;
+import com.mavenforge.Decoders.ClassFile.Decompiler;
 
 public abstract class Model {
     protected static String table;
@@ -17,49 +20,26 @@ public abstract class Model {
     }
 
     public static <T> void find(T $id) {
-        String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
         String className = Thread.currentThread().getStackTrace()[2].getClassName();
-        Integer lineNumber = Thread.currentThread().getStackTrace()[2].getLineNumber();
 
-        Class<?> invokingClass = null;
+        Class<?> clazz = null;
 
         try {
-            invokingClass = Class.forName(className);
-        } catch (Exception e) {
+            clazz = Class.forName(className);
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            throw new RuntimeException(e.toString());
         }
 
-        System.out.println("Method Name: " + methodName);
-
-        Method method = null;
-
-        for (Method m : invokingClass.getDeclaredMethods()) {
-            if (m.getName().equals(methodName)) {
-                method = m;
-                break;
-            }
-        }
-
-        String classFilePath = invokingClass.getProtectionDomain().getCodeSource().getLocation().getPath();
-        classFilePath += "/" + className.replace(".", "/") + ".class";
-        File file = new File(classFilePath);
-
-        // System.out.println("Class File Path: " + classFilePath);
-        // System.out.println("Class Name: " + className);
-
-        String content = "";
+        String classFilePath = clazz.getProtectionDomain().getCodeSource().getLocation().getPath()
+                + clazz.getName().replace(".", "/") + ".class";
 
         try {
-            content = new String(java.nio.file.Files.readAllBytes(file.toPath()));
-        } catch (Exception e) {
-            throw new RuntimeException(e.toString());
+            Decompiler decompiler = new Decompiler();
+            ClassNode classNode = decompiler.decompile(classFilePath);
+            getClassAttributes(clazz);
+            System.out.println(decompiler.reconstructClass(classNode));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        ClassfileDecoder decoder = new ClassfileDecoder(classFilePath);
-
-        System.out.println(decoder.decode());
-
     }
-
 }
