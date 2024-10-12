@@ -1,4 +1,4 @@
-package com.mavenforge.Decoders.ClassFile;
+package com.mavenforge.Decoders.Custom.ClassFile;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
