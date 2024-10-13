@@ -3,7 +3,12 @@ package com.mavenforge.Database;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.mavenforge.Contracts.Databases.SQLDatabaseContract;
 
@@ -11,6 +16,8 @@ public class MySQLDatabase extends SQLDatabaseContract {
     Connection connection = null;
     String table = "";
     String query = "";
+    String primaryKey = "id";
+    String columns = "";
     private String databaseName = "";
 
     public MySQLDatabase(String connectionString) {
@@ -124,17 +131,22 @@ public class MySQLDatabase extends SQLDatabaseContract {
         }
     }
 
-    public void select(String columns, String condition) {
+    public ResultSet select(String columns, String condition) {
         query = "SELECT ? FROM ? WHERE ?";
+        ResultSet result = null;
         try {
             PreparedStatement preparedQuery = connection.prepareStatement(query);
             preparedQuery.setString(1, columns);
             preparedQuery.setString(2, table);
             preparedQuery.setString(3, condition);
             preparedQuery.execute();
+            result = preparedQuery.getResultSet();
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+
+        return result;
     }
 
     public void dropTable(String tableName) {
@@ -203,6 +215,19 @@ public class MySQLDatabase extends SQLDatabaseContract {
         }
     }
 
+    public ResultSet customQuery(String query, List<Object> parameters) {
+        this.query = query;
+        try {
+            PreparedStatement preparedQuery = connection.prepareStatement(query);
+            for (int i = 0; i < parameters.size(); i++) {
+                preparedQuery.setObject(i + 1, parameters.get(i));
+            }
+            return preparedQuery.executeQuery();
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not execute the query. Please check your query.");
+        }
+    }
+
     public void closeConnection() {
         try {
             connection.close();
@@ -211,13 +236,93 @@ public class MySQLDatabase extends SQLDatabaseContract {
         }
     }
 
+    private List<Map<String, Object>> resultToMap(ResultSet result) {
+        List<Map<String, Object>> resultList = new ArrayList<>();
+
+        try {
+            ResultSetMetaData metaData = result.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            while (result.next()) {
+                Map<String, Object> rowMap = new HashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    rowMap.put(metaData.getColumnName(i), result.getObject(i));
+                }
+                resultList.add(rowMap);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return resultList;
+    }
+
     // /*
     // * Database main queries functions
     // */
 
-    // public Object all() {
-    // String query = "SELECT * FROM " + table;
-    // return customQuery(query);
-    // }
+    public List<Map<String, Object>> all() {
+        String query = "SELECT * FROM ?";
+        ResultSet result = this.customQuery(query, List.of(this.table));
+        return this.resultToMap(result);
+    }
+
+    public List<Map<String, Object>> find() {
+        return this.all();
+    }
+
+    public List<Map<String, Object>> find(String id) {
+        ResultSet result = this.select("*", primaryKey + " = " + id);
+        return this.resultToMap(result);
+    }
+
+    public Map<String, Object> findOne(String id) {
+        ResultSet result = this.select("*", primaryKey + " = " + id);
+        return this.resultToMap(result).get(0);
+    }
+
+    public Map<String, Object> first() {
+        ResultSet result = this.select("*", "1");
+        return this.resultToMap(result).get(0);
+    }
+
+    public List<Map<String, Object>> where(String column, String value) {
+        ResultSet result = this.select("*", column + " = " + value);
+        return this.resultToMap(result);
+    }
+
+    public List<Map<String, Object>> where(String column, String operator, String value) {
+        ResultSet result = this.select("*", column + " " + operator + " " + value);
+        return this.resultToMap(result);
+    }
+
+    public List<Map<String, Object>> where(String column, String operator, String value, String column2,
+            String operator2,
+            String value2) {
+        ResultSet result = this.select("*", column + " " + operator + " " + value + " AND " + column2 + " " + operator2
+                + " " + value2);
+        return this.resultToMap(result);
+    }
+
+    public List<Map<String, Object>> where(Map<String, String> conditions) {
+        String conds = "";
+        for (Map.Entry<String, String> entry : conditions.entrySet()) {
+            conds += entry.getKey() + " = " + entry.getValue() + " AND ";
+        }
+        return this.resultToMap(this.select("*", conds.substring(0, conds.length() - 5)));
+    }
+
+    public boolean insert(Map<String, Object> data) {
+        String columns = "";
+        String values = "";
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            columns += entry.getKey() + ", ";
+            values += entry.getValue() + ", ";
+        }
+        columns = columns.substring(0, columns.length() - 2);
+        values = values.substring(0, values.length() - 2);
+        this.insert(this.table, columns, values.split(", "));
+        return true;
+    }
 
 }
