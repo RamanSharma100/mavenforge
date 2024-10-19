@@ -15,7 +15,6 @@ public class Schema extends SchemaContract {
         switch (db) {
             case "mysql":
                 MySQLSchema blueprint = new MySQLSchema(table);
-
                 Consumer<MySQLSchema> consumer = (Consumer<MySQLSchema>) callback;
                 consumer.accept(blueprint);
                 // blueprint.build();

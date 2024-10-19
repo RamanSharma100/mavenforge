@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 
 import com.mavenforge.Http.Router;
 import com.mavenforge.Application;
+import com.mavenforge.Http.HTTPContext;
 import com.mavenforge.Http.HTTPRequest;
 import com.mavenforge.Http.HTTPResponse;
 import com.mavenforge.Utils.ImportClass;
@@ -13,6 +14,7 @@ public class HTTPClientHandler implements Runnable {
     private Socket clientSocket;
     private HTTPResponse response;
     private HTTPRequest request;
+    private HTTPContext context;
 
     public HTTPClientHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
@@ -24,8 +26,9 @@ public class HTTPClientHandler implements Runnable {
 
             this.request = new HTTPRequest(this.clientSocket);
             this.response = new HTTPResponse(this.clientSocket, this.request);
+            this.context = new HTTPContext(this.request, this.response);
 
-            Application.router = new Router(this.request, this.response);
+            Application.router = new Router(this.request, this.response, this.context);
 
             if (this.request.getPath() == null) {
                 clientSocket.close();

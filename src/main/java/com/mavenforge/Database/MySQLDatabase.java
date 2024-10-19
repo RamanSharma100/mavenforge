@@ -325,4 +325,27 @@ public class MySQLDatabase extends SQLDatabaseContract {
         return true;
     }
 
+    public boolean update(Map<String, Object> data, String id) {
+        String columns = "";
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            columns += entry.getKey() + " = ? , ";
+        }
+        columns = columns.substring(0, columns.length() - 2);
+        this.update(this.table, columns, data.values().toArray(), primaryKey + " = " + id);
+        return true;
+    }
+
+    public boolean delete(String id) {
+        this.delete(this.table, primaryKey + " = " + id);
+        return true;
+    }
+
+    public boolean delete(Map<String, Object> conditions) {
+        String conds = "";
+        for (Map.Entry<String, Object> entry : conditions.entrySet()) {
+            conds += entry.getKey() + " = " + entry.getValue() + " AND ";
+        }
+        this.delete(this.table, conds.substring(0, conds.length() - 5));
+        return true;
+    }
 }

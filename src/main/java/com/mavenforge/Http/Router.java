@@ -14,10 +14,12 @@ public class Router {
     private Map<String, Map<String, Object>> routes = new HashMap<String, Map<String, Object>>();
     public HTTPRequest request;
     public HTTPResponse response;
+    public HTTPContext context;
 
-    public Router(HTTPRequest request, HTTPResponse response) {
+    public Router(HTTPRequest request, HTTPResponse response, HTTPContext context) {
         this.request = request;
         this.response = response;
+        this.context = context;
     }
 
     public Router get(String path, Object callback) {
@@ -39,6 +41,37 @@ public class Router {
 
         } else {
             this.routes.get("post").put(path, callback);
+        }
+
+        return this;
+    }
+
+    public Router add(String path, Object callback) {
+        String[] methods = { "get", "post", "patch", "put", "options", "delete" };
+
+        for (String method : methods) {
+            if (!this.routes.containsKey(method)) {
+                this.routes.put(method, new HashMap<String, Object>());
+                this.routes.get(method).put(path, callback);
+            } else {
+                this.routes.get(method).put(path, callback);
+            }
+        }
+
+        return this;
+    }
+
+    public Router add(String path, Object callback, String[] allowedMethods) {
+        String[] methods = allowedMethods;
+
+        for (String method : methods) {
+            method = method.toLowerCase();
+            if (!this.routes.containsKey(method)) {
+                this.routes.put(method, new HashMap<String, Object>());
+                this.routes.get(method).put(path, callback);
+            } else {
+                this.routes.get(method).put(path, callback);
+            }
         }
 
         return this;

@@ -39,4 +39,38 @@ public class Route {
         Application.router.post(path, callback);
         return Application.router;
     }
+
+    public static Router add(String path, Object callback) {
+        Application.router.add(path, callback);
+        return Application.router;
+    }
+
+    public static Router add(String path, Class<?> controller, Object callback) {
+        String controllerName = controller.getSimpleName();
+        Application.router.add(path, controllerName + "@" + callback);
+
+        return Application.router;
+    }
+
+    public static Router add(String path, BiConsumer<HTTPRequest, HTTPResponse> callback) {
+        Application.router.add(path, callback);
+        return Application.router;
+    }
+
+    public static Router add(String path, Object callback, String[] allowedMethods) {
+        Application.router.add(path, callback, allowedMethods);
+        return Application.router;
+    }
+
+    public static Router add(String path, Class<?> controller, Object callback, String[] allowedMethods) {
+        String controllerName = controller.getSimpleName();
+        Application.router.add(path, controllerName + "@" + callback, allowedMethods);
+
+        return Application.router;
+    }
+
+    public static Router add(String path, BiConsumer<HTTPRequest, HTTPResponse> callback, String[] allowedMethods) {
+        Application.router.add(path, callback, allowedMethods);
+        return Application.router;
+    }
 }
