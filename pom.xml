@@ -7,6 +7,7 @@
     <groupId>com.mavenforge</groupId>
     <artifactId>mavenforge</artifactId>
     <version>0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -60,6 +61,12 @@
                 <excludes>
                     <exclude>Decoders/Custom/ClassFile/*.java</exclude>
                 </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
             </resource>
         </resources>
     </build>

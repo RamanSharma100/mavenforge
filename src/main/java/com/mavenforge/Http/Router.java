@@ -88,7 +88,7 @@ public class Router {
         Object callback = this.routes.get(method).get(path);
 
         if (callback == null) {
-            this.response.status(404).response("This " + path + " route does not exist").send();
+            this.response.status(404).send("This " + path + " route does not exist");
             return;
         }
 
@@ -107,14 +107,13 @@ public class Router {
 
                 } catch (Exception e) {
                     e.printStackTrace();
-                    this.response.status(500).response("Controller '" + controllerName + "' not found, Create " +
-                            controllerName + ".java in " + Application.rootClassPackage + ".controllers package")
-                            .send();
+                    this.response.status(500).send("Controller '" + controllerName + "' not found, Create " +
+                            controllerName + ".java in " + Application.rootClassPackage + ".controllers package");
                     return;
                 }
 
             } else {
-                this.response.status(200).response("Render view: " + callback.toString() + ".html").send();
+                this.response.status(200).send("Render view: " + callback.toString() + ".html");
                 return;
             }
         }
@@ -174,16 +173,14 @@ public class Router {
                 }
             } else {
                 response.status(500)
-                        .response("Method '" + methodName + "' with expected signatures not found in controller '"
-                                + controllerPackage + "'")
-                        .send();
+                        .send("Method '" + methodName + "' with expected signatures not found in controller '"
+                                + controllerPackage + "'");
             }
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException
                 | NoSuchMethodException e) {
             System.out.println(e);
             response.status(500)
-                    .response("Error invoking method '" + methodName + "' in controller '" + controllerPackage + "'")
-                    .send();
+                    .send("Error invoking method '" + methodName + "' in controller '" + controllerPackage + "'");
         }
     }
 

@@ -15,7 +15,9 @@ public class TemplateLoader implements com.mavenforge.Contracts.TemplateLoaderCo
             return content;
 
         } catch (Exception e) {
-            throw new TemplateException("Error loading template", e);
+            String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
+            TemplateException templateException = new TemplateException("Error loading template " + fileName, e);
+            return templateException.render();
         }
     }
 }

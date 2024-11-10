@@ -25,12 +25,12 @@ public class HTTPContext {
         return this.request.getPath();
     }
 
-    public String getBody() {
+    public Object getBody() {
         return this.request.getBody();
     }
 
     public void response(String body) {
-        this.response.response(body);
+        this.response.send(body);
     }
 
 }

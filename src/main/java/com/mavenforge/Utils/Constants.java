@@ -10,6 +10,7 @@ public class Constants {
     public static Dotenv env = null;
     public static String rootClassPackage = null;
     public static final String TEMPLATE_EXTENSION = ".vyuha";
+    public static final String DEFAULT_TEMPLATE_DIR = "default_views";
 
     public static enum DatabaseType {
         mysql, postgresql, sqlite, mongodb
@@ -25,6 +26,15 @@ public class Constants {
 
     public static String getTEMPLATE_EXTENSION() {
         return Constants.TEMPLATE_EXTENSION;
+    }
+
+    public static String getDEFAULT_TEMPLATE_DIR() {
+        return Constants.DEFAULT_TEMPLATE_DIR;
+    }
+
+    public static String getDefaultViewsPath(String viewName) {
+        String path = Constants.getResourcePath(Constants.DEFAULT_TEMPLATE_DIR);
+        return path + "/" + viewName + Constants.TEMPLATE_EXTENSION;
     }
 
     public static String getPackagePath() {

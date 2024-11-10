@@ -32,7 +32,7 @@ public class HTTPResponse {
         }
     }
 
-    public HTTPResponse response(String body) {
+    public HTTPResponse send(String body) {
         this.endTime = System.nanoTime();
         this.responseTime = (this.endTime - this.startTime) / 1000000;
         if (!statusCodeWrote) {
@@ -44,6 +44,11 @@ public class HTTPResponse {
         this.writer.println();
         this.writer.println(body);
         this.responseByte = body.length();
+
+        this.writer.flush();
+        System.out.println(request.getMethod() + " " + request.getPath() + "\t" + this.responseTime
+                + "ms\t" + this.responseByte + " bytes\t" + this.statusCode + " - "
+                + this.getStatusText(this.statusCode));
 
         return this;
     }
@@ -62,15 +67,6 @@ public class HTTPResponse {
         return this;
     }
 
-    public HTTPResponse send() {
-        this.writer.flush();
-        System.out.println(request.getMethod() + " " + request.getPath() + "\t" + this.responseTime
-                + "ms\t" + this.responseByte + " bytes\t" + this.statusCode + " - "
-                + this.getStatusText(this.statusCode));
-
-        return this;
-    }
-
     public void close() throws IOException {
         try {
             this.writer.close();
@@ -82,12 +78,53 @@ public class HTTPResponse {
 
     public HTTPResponse render(String viewName) {
         String view = View.render(viewName, this.VIEWS_DIR);
-        return this.response(view);
+        return this.send(view);
     }
 
     public HTTPResponse render(String viewName, Map<String, Object> data) {
         String view = View.render(viewName, data, this.VIEWS_DIR);
-        return this.response(view);
+        return this.send(view);
+    }
+
+    public HTTPResponse redirect(String path) {
+        this.status(302);
+        this.writer.println("Location: " + path);
+        return this;
+    }
+
+    public HTTPResponse json(Map<String, Object> data) {
+        this.writer.println("Content-Type: application/json");
+        this.writer.println("Content-Length: " + data.toString().length());
+        this.writer.println();
+        this.writer.println(data.toString());
+        this.responseByte = data.toString().length();
+        return this;
+    }
+
+    public HTTPResponse json(String data) {
+        this.writer.println("Content-Type: application/json");
+        this.writer.println("Content-Length: " + data.length());
+        this.writer.println();
+        this.writer.println(data);
+        this.responseByte = data.length();
+        return this;
+    }
+
+    public HTTPResponse json(Object data) {
+        this.writer.println("Content-Type: application/json");
+        this.writer.println("Content-Length: " + data.toString().length());
+        this.writer.println();
+        this.writer.println(data.toString());
+        this.responseByte = data.toString().length();
+        return this;
+    }
+
+    public HTTPResponse json() {
+        this.writer.println("Content-Type: application/json");
+        this.writer.println("Content-Length: 0");
+        this.writer.println();
+        this.responseByte = 0;
+        return this;
     }
 
     private String getStatusText(int code) {
