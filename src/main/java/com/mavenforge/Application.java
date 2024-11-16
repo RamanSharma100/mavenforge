@@ -50,8 +50,7 @@ public class Application {
         boolean isDbEnabled = Boolean.parseBoolean(dotenv.get("ENABLE_DATABASE", "false"));
 
         if (isDbEnabled) {
-            Database db = DatabaseFactory.getDatabase();
-            Application.database = db;
+            Application.initializeDatabase();
         } else {
             System.out.println("Database disabled.");
         }
@@ -90,6 +89,10 @@ public class Application {
         }
 
         return 8080;
+    }
+
+    private static void initializeDatabase() {
+        database = DatabaseFactory.getDatabase();
     }
 
 }

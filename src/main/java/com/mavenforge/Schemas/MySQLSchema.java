@@ -720,8 +720,8 @@ public class MySQLSchema {
             Application.database = database;
         }
 
-        if (this.isStructureChanged(((MySQLDatabase) database.db))) {
-            MySQLDatabase db = (MySQLDatabase) database.db;
+        if (this.isStructureChanged(((MySQLDatabase) database.mySQLDatabase))) {
+            MySQLDatabase db = (MySQLDatabase) database.mySQLDatabase;
             if (this.dropTable) {
                 System.out.println("Dropping table " + this.table);
                 db.dropTable(this.table);

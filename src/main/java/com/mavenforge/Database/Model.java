@@ -17,7 +17,7 @@ public abstract class Model {
     protected static Class<?> modelName;
     protected static String migration;
     protected static List<String> attributes;
-    protected static Object db = Application.database.db;
+    protected static MySQLDatabase mySQLDatabase = Application.database.mySQLDatabase;
 
     static class ModelFields {
         private String table;
@@ -136,9 +136,8 @@ public abstract class Model {
         String[] guarded = modelProtectedFields.getGuarded();
         String[] fillables = modelProtectedFields.getFillables();
 
-
         try {
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }

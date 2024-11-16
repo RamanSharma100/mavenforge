@@ -1,15 +1,34 @@
 package com.mavenforge.Contracts;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 public abstract class DatabaseContract {
-    public String connectionString;
+    protected String connectionString;
+    protected String driverClass;
 
-    public DatabaseContract(String connectionString){
+    public DatabaseContract(String connectionString, final String driverClass) {
         this.connectionString = connectionString;
+        this.driverClass = driverClass;
     }
 
-    public abstract Connection connect() throws SQLException;
+    protected void checkDriverPresence() throws Exception {
+        if (!isDriverPresent()) {
+            throw this.throwDriverNotFoundException();
+        }
+    };
+
+    private boolean isDriverPresent() {
+        try {
+            Class.forName(this.driverClass);
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    private Exception throwDriverNotFoundException() {
+        return new Exception(
+                "Database Driver not found, please add the driver " + this.driverClass + " to your project.");
+    }
+
+    public abstract void setTable(String table);
 
 }

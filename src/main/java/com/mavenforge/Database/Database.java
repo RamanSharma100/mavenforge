@@ -5,9 +5,10 @@ import io.github.cdimascio.dotenv.Dotenv;
 import com.mavenforge.Utils.Constants.DatabaseType;
 
 public class Database {
-    public Object db = null;
-    public DatabaseType databaseType = DatabaseType.mysql;
+
+    public MySQLDatabase mySQLDatabase;
     private Dotenv env = Dotenv.configure().load();
+    public DatabaseType databaseType = DatabaseType.mysql;
 
     public Database() {
         boolean databaseEnabled = Boolean.parseBoolean(this.env.get("ENABLE_DATABASE", "false"));
@@ -26,26 +27,23 @@ public class Database {
         int databasePort = Integer.parseInt(this.env.get("DATABASE_PORT", "3306"));
         String databaseType = this.env.get("DATABASE_TYPE", DatabaseType.mysql.toString());
 
-        switch (databaseType) {
-            case "mysql":
-                String connectionString = "jdbc:mysql://" + databaseHost + ":" + databasePort + "/" + databaseName
-                        + "?user=" + databaseUser;
-                if (databasePassword != null && !databasePassword.isEmpty()) {
-                    connectionString += "&password=" + databasePassword;
-                }
-                this.db = new MySQLDatabase(connectionString);
-                this.databaseType = DatabaseType.mysql;
-                break;
-            default:
-                String defaultConnectionString = "jdbc:mysql://" + databaseHost + ":" + databasePort + "/"
-                        + databaseName + "?user=" + databaseUser;
-                if (databasePassword != null && !databasePassword.isEmpty()) {
-                    defaultConnectionString += "&password=" + databasePassword;
-                }
-                this.db = new MySQLDatabase(defaultConnectionString);
-                this.databaseType = DatabaseType.mysql;
-                break;
+        this.mySQLDatabase = this.createMySQLDatabase(databaseType, databaseUser, databasePassword, databaseHost,
+                databaseName, databasePort);
+
+        this.databaseType = DatabaseType.valueOf(databaseType);
+
+    }
+
+    private MySQLDatabase createMySQLDatabase(String databaseType, String databaseUser, String databasePassword,
+            String databaseHost,
+            String databaseName, int databasePort) {
+        String connectionString = "jdbc:mysql://" + databaseHost + ":" + databasePort + "/" + databaseName
+                + "?user=" + databaseUser;
+        if (databasePassword != null && !databasePassword.isEmpty()) {
+            connectionString += "&password=" + databasePassword;
         }
+
+        return new MySQLDatabase(connectionString);
     }
 
 }
