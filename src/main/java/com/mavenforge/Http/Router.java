@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
 import com.mavenforge.Application;
+import com.mavenforge.Services.Cookie;
 
 public class Router {
 
@@ -79,6 +80,8 @@ public class Router {
 
     public void resolve() {
         String path = this.request.getPath();
+        Cookie sessionCookie = this.request.getCookie("SESSION_ID");
+        System.out.println("Session ID: " + sessionCookie.getValue());
 
         if (!path.equals("/") && path.charAt(path.length() - 1) == '/') {
             path = path.substring(0, path.length() - 1);

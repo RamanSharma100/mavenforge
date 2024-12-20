@@ -1,12 +1,16 @@
 package com.mavenforge.Services;
 
 import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.mavenforge.Http.HTTPRequest;
 
 public class Cookie {
-    private final String name;
-    private final String value;
-    private final String domain;
-    private final String path = "/";
+    private static final ConcurrentHashMap<String, Cookie> cookieStore = new ConcurrentHashMap<>();
+    private String name;
+    private String value;
+    private String domain;
+    private String path = "/";
     private Instant maxAge;
     private boolean httpOnly = true;
     private boolean secure = true;
@@ -39,15 +43,25 @@ public class Cookie {
     }
 
     public Cookie setDomain(String domain) {
-        return new Cookie(name, value, domain, maxAge);
+        this.domain = domain;
+        return this;
+    }
+
+    public Cookie setPath(String path) {
+        this.path = path;
+        return this;
     }
 
     public static Cookie set(String name, String value) {
-        return new Cookie(name, value);
+        Cookie cookie = new Cookie(name, value);
+        cookieStore.put(name, cookie);
+        return cookie;
     }
 
     public static Cookie set(String name, String value, String domain, Instant expiry) {
-        return new Cookie(name, value, domain, expiry);
+        Cookie cookie = new Cookie(name, value, domain, expiry);
+        cookieStore.put(name, cookie);
+        return cookie;
     }
 
     public String toHeaderString() {
@@ -68,6 +82,34 @@ public class Cookie {
     public static Cookie delete(String name) {
         Cookie cookie = new Cookie(name, "");
         cookie.setExpiry(Instant.ofEpochMilli(0));
+        cookieStore.remove(name);
         return cookie;
     }
+
+    public static boolean remove(String sessionId) {
+        return cookieStore.remove(sessionId) != null;
+    }
+
+    public static Cookie get(String name) {
+        return cookieStore.get(name);
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public static Cookie get(HTTPRequest request, String cookieName) {
+        String cookieHeader = request.getHeader("Cookie");
+        if (cookieHeader != null) {
+            String[] cookiePairs = cookieHeader.split(";");
+            for (String pair : cookiePairs) {
+                String[] parts = pair.trim().split("=", 2);
+                if (parts.length == 2 && parts[0].equals(cookieName)) {
+                    return new Cookie(parts[0], parts[1]);
+                }
+            }
+        }
+        return null;
+    }
+
 }

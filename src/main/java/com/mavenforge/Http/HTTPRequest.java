@@ -2,6 +2,8 @@ package com.mavenforge.Http;
 
 import java.util.Map;
 
+import com.mavenforge.Services.Cookie;
+import com.mavenforge.Services.HttpSession;
 import com.mavenforge.Utils.DataTypeParser;
 
 import java.net.Socket;
@@ -19,6 +21,7 @@ public class HTTPRequest {
     private Map<String, String> params;
     private Map<String, String> headers;
     private Map<String, String> searchParams;
+    private String sessionId;
 
     public HTTPRequest(Socket socket) throws IOException {
         this.body = new HashMap<>();
@@ -28,6 +31,14 @@ public class HTTPRequest {
 
         this.startTime = System.nanoTime();
         parseRequest(socket);
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
+    public Cookie getCookie(String key) {
+        return Cookie.get(key) != null ? Cookie.get(key) : null;
     }
 
     private void parseRequest(Socket socket) throws IOException {
@@ -84,6 +95,12 @@ public class HTTPRequest {
                 }
             }
 
+        }
+
+        String sessionId = Cookie.get("SESSION_ID") != null ? Cookie.get("SESSION_ID").getValue() : null;
+
+        if (sessionId == null || !HttpSession.isActive(sessionId)) {
+            sessionId = HttpSession.start();
         }
     }
 

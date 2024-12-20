@@ -17,6 +17,7 @@ public class HTTPResponse {
     private Boolean statusCodeWrote = false;
     private String VIEWS_DIR = "views";
     private long startTime, endTime, responseTime;
+    private String sessionId = null;
     public transient static String rootClassPackage = Constants.rootClassPackage;
 
     public HTTPResponse(Socket socket, HTTPRequest request) throws IOException {
@@ -30,6 +31,7 @@ public class HTTPResponse {
                 this.VIEWS_DIR = viewsDir;
             }
         }
+        this.sessionId = request.getCookie("SESSION_ID") != null ? request.getCookie("SESSION_ID").getValue() : null;
     }
 
     public HTTPResponse send(String body) {
@@ -41,6 +43,10 @@ public class HTTPResponse {
         }
         this.writer.println("Content-Type: text/html");
         this.writer.println("Content-Length: " + body.length());
+        if (this.sessionId != null) {
+            this.writer.println(
+                    "Set-Cookie: SESSION_ID=" + this.sessionId + "; Path=/; HttpOnly; Secure; SameSite=Strict");
+        }
         this.writer.println();
         this.writer.println(body);
         this.responseByte = body.length();
@@ -95,33 +101,61 @@ public class HTTPResponse {
     public HTTPResponse json(Map<String, Object> data) {
         this.writer.println("Content-Type: application/json");
         this.writer.println("Content-Length: " + data.toString().length());
+        if (this.sessionId != null) {
+            this.writer.println(
+                    "Set-Cookie: SESSION_ID=" + this.sessionId + "; Path=/; HttpOnly; Secure; SameSite=Strict");
+        }
         this.writer.println();
         this.writer.println(data.toString());
         this.responseByte = data.toString().length();
+        this.writer.flush();
+        System.out.println(request.getMethod() + " " + request.getPath() + "\t" + this.responseTime
+                + "ms\t" + this.responseByte + " bytes\t" + this.statusCode + " - "
+                + this.getStatusText(this.statusCode));
         return this;
     }
 
     public HTTPResponse json(String data) {
         this.writer.println("Content-Type: application/json");
         this.writer.println("Content-Length: " + data.length());
+        if (this.sessionId != null) {
+            this.writer.println(
+                    "Set-Cookie: SESSION_ID=" + this.sessionId + "; Path=/; HttpOnly; Secure; SameSite=Strict");
+        }
         this.writer.println();
         this.writer.println(data);
         this.responseByte = data.length();
+        this.writer.flush();
+        System.out.println(request.getMethod() + " " + request.getPath() + "\t" + this.responseTime
+                + "ms\t" + this.responseByte + " bytes\t" + this.statusCode + " - "
+                + this.getStatusText(this.statusCode));
         return this;
     }
 
     public HTTPResponse json(Object data) {
         this.writer.println("Content-Type: application/json");
         this.writer.println("Content-Length: " + data.toString().length());
+        if (this.sessionId != null) {
+            this.writer.println(
+                    "Set-Cookie: SESSION_ID=" + this.sessionId + "; Path=/; HttpOnly; Secure; SameSite=Strict");
+        }
         this.writer.println();
         this.writer.println(data.toString());
         this.responseByte = data.toString().length();
+        this.writer.flush();
+        System.out.println(request.getMethod() + " " + request.getPath() + "\t" + this.responseTime
+                + "ms\t" + this.responseByte + " bytes\t" + this.statusCode + " - "
+                + this.getStatusText(this.statusCode));
         return this;
     }
 
     public HTTPResponse json() {
         this.writer.println("Content-Type: application/json");
         this.writer.println("Content-Length: 0");
+        if (this.sessionId != null) {
+            this.writer.println(
+                    "Set-Cookie: SESSION_ID=" + this.sessionId + "; Path=/; HttpOnly; Secure; SameSite=Strict");
+        }
         this.writer.println();
         this.responseByte = 0;
         return this;

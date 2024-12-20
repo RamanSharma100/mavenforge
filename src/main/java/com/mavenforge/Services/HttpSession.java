@@ -1,75 +1,54 @@
 package com.mavenforge.Services;
 
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.time.Instant;
 import java.util.HashMap;
 
+import com.mavenforge.Http.HTTPRequest;
+
 public class HttpSession {
-    public static final Map<String, Map<String, Object>> sessions = new HashMap<String, Map<String, Object>>();
-    public static final ThreadLocal<String> currentSessionToken = new ThreadLocal<String>();
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Object>> sessions = new ConcurrentHashMap<>();
+    private static final long DEFAULT_SESSION_TIMEOUT = 30 * 60;
 
     public static String start() {
-        if (isSessionStarted()) {
-            return currentSessionToken.get();
-        }
-
-        String sessionToken = java.util.UUID.randomUUID().toString();
-        sessions.put(sessionToken, new HashMap<String, Object>());
-        currentSessionToken.set(sessionToken);
-        return sessionToken;
+        String sessionId = UUID.randomUUID().toString() + "_mfg_session_" + System.currentTimeMillis();
+        sessions.put(sessionId, new ConcurrentHashMap<>());
+        Cookie.set("SESSION_ID", sessionId).setPath("/").setHttpOnly(true);
+        return sessionId;
     }
 
-    public static boolean isSessionStarted() {
-        return currentSessionToken.get() != null;
+    public static Cookie get(HTTPRequest request) {
+        return Cookie.get(request, "SESSION_ID");
     }
 
-    public static void destroy() {
-        if (isSessionStarted()) {
-            sessions.remove(currentSessionToken.get());
-            currentSessionToken.remove();
-        }
+    public static Object get(String sessionId, String key) {
+        return sessions.getOrDefault(sessionId, new ConcurrentHashMap<>()).get(key);
     }
 
-    public static void destroy(String sessionToken) {
-        sessions.remove(sessionToken);
-        if (currentSessionToken.get().equals(sessionToken)) {
-            currentSessionToken.remove();
-        }
+    public static void set(String sessionId, String key, Object value) {
+        sessions.computeIfAbsent(sessionId, x -> new ConcurrentHashMap<>()).put(key, value);
     }
 
-    public static Map<String, Object> get() {
-        return sessions.get(currentSessionToken.get());
+    public static void end(String sessionId) {
+        Cookie.remove(sessionId);
     }
 
-    public static Map<String, Object> get(String sessionToken) {
-        return sessions.get(sessionToken);
-    }
-
-    public static void setAttribute(String sessionId, String key, Object value) {
-        Map<String, Object> sessionData = sessions.get(sessionId);
-        if (sessionData != null) {
-            sessionData.put(key, value);
-        }
-    }
-
-    public static void setAttribute(String key, Object value) {
-        if (isSessionStarted()) {
-            Map<String, Object> sessionData = sessions.get(currentSessionToken.get());
-            if (sessionData != null) {
-                sessionData.put(key, value);
-            }
-        }
-    }
-
-    public static String getCurrentSessionToken() {
-        return currentSessionToken.get();
-    }
-
-    public static void set(Map<String, Object> sessionData) {
-        sessions.put(currentSessionToken.get(), sessionData);
-    }
-
-    public static boolean sessionExists(String sessionId) {
+    public static boolean isActive(String sessionId) {
         return sessions.containsKey(sessionId);
+    }
+
+    public static void invalidate(String sessionId) {
+        sessions.remove(sessionId);
+        Cookie.delete("SESSION_ID");
+    }
+
+    public static void cleanUpExpiredSessions() {
+        sessions.entrySet().removeIf(entry -> {
+            Instant lastAccess = (Instant) entry.getValue().getOrDefault("LAST_ACCESS", Instant.now());
+            return Instant.now().isAfter(lastAccess.plusSeconds(DEFAULT_SESSION_TIMEOUT));
+        });
     }
 
 }
